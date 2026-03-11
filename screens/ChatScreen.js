@@ -148,9 +148,14 @@ export default function ChatScreen() {
   const prevUserRef = useRef(null);
 
   useEffect(() => {
+    // Giriş durumu değiştiğinde kontrol et
     if (user && !prevUserRef.current) {
-      // Yeni giriş yapıldı, profil sayfasını aç
-      setShowProfile(true);
+      // Yeni giriş yapıldı, önce login modalı kapat sonra profili aç
+      setShowLogin(false);
+      // Kısa bir gecikme ile profil sayfasını aç
+      setTimeout(() => {
+        setShowProfile(true);
+      }, 100);
     }
     prevUserRef.current = user;
   }, [user]);
