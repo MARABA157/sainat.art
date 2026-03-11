@@ -2,16 +2,30 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function MessageBubble({ message, isUser, timestamp }) {
+export default function MessageBubble({ message, isUser, theme }) {
   return (
     <View style={[styles.container, isUser ? styles.userContainer : styles.aiContainer]}>
       {!isUser && (
-        <TouchableOpacity style={styles.plusButton}>
-          <Ionicons name="add" size={16} color="#8E8EA0" />
+        <TouchableOpacity style={[styles.plusButton, { backgroundColor: theme.messageActionBackground }]}>
+          <Ionicons name="add" size={16} color={theme.messageActionIcon} />
         </TouchableOpacity>
       )}
-      <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-        <Text style={[styles.text, isUser ? styles.userText : styles.aiText]}>
+      <View
+        style={[
+          styles.bubble,
+          isUser
+            ? [styles.userBubble, { backgroundColor: theme.userBubbleBackground }]
+            : [styles.aiBubble, { backgroundColor: theme.aiBubbleBackground }],
+        ]}
+      >
+        <Text
+          style={[
+            styles.text,
+            isUser
+              ? [styles.userText, { color: theme.userBubbleText }]
+              : [styles.aiText, { color: theme.aiBubbleText }],
+          ]}
+        >
           {message}
         </Text>
       </View>
@@ -36,7 +50,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#343541',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -47,21 +60,15 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   userBubble: {
-    backgroundColor: '#10A37F',
     borderBottomRightRadius: 4,
   },
   aiBubble: {
-    backgroundColor: '#444654',
     borderBottomLeftRadius: 4,
   },
   text: {
     fontSize: 16,
     lineHeight: 22,
   },
-  userText: {
-    color: '#FFFFFF',
-  },
-  aiText: {
-    color: '#ECECF1',
-  },
+  userText: {},
+  aiText: {},
 });

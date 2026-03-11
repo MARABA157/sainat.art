@@ -9,7 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import ModelMenu from './ModelMenu';
 
-export default function ChatInput({ onSend, isTyping, t }) {
+export default function ChatInput({ onSend, isTyping, t, theme }) {
   const [message, setMessage] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
@@ -28,24 +28,26 @@ export default function ChatInput({ onSend, isTyping, t }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.inputBarBackground, borderTopColor: theme.inputBarBorder }]}>
       <ModelMenu
         isVisible={menuVisible}
         onClose={() => setMenuVisible(false)}
         onSelect={handleModelSelect}
         t={t}
       />
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper, { backgroundColor: theme.inputWrapperBackground }]}>
         <TouchableOpacity 
           style={styles.plusButton}
           onPress={() => setMenuVisible(true)}
         >
-          <Ionicons name="globe" size={24} color="#8E8EA0" />
+          <Ionicons name="globe" size={24} color={theme.inputIcon} />
         </TouchableOpacity>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: theme.inputText }]}
           placeholder={t.inputPlaceholder}
-          placeholderTextColor="#8E8EA0"
+          placeholderTextColor={theme.inputPlaceholder}
+          cursorColor="#10A37F"
+          selectionColor="#10A37F"
           value={message}
           onChangeText={setMessage}
           multiline
@@ -53,14 +55,18 @@ export default function ChatInput({ onSend, isTyping, t }) {
           editable={!isTyping}
         />
         <TouchableOpacity
-          style={[styles.sendButton, (!message.trim() || isTyping) && styles.sendButtonDisabled]}
+          style={[
+            styles.sendButton,
+            { backgroundColor: theme.sendButtonBackground },
+            (!message.trim() || isTyping) && [styles.sendButtonDisabled, { backgroundColor: 'transparent' }],
+          ]}
           onPress={handleSend}
           disabled={!message.trim() || isTyping}
         >
           {isTyping ? (
-            <ActivityIndicator size="small" color="#8E8EA0" />
+            <ActivityIndicator size="small" color={theme.inputIcon} />
           ) : (
-            <Ionicons name="send" size={20} color={message.trim() ? '#FFFFFF' : '#8E8EA0'} />
+            <Ionicons name="send" size={20} color={message.trim() ? theme.sendButtonIcon : theme.inputIcon} />
           )}
         </TouchableOpacity>
       </View>
@@ -72,14 +78,11 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#343541',
     borderTopWidth: 1,
-    borderTopColor: '#4D4D4F',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#40414F',
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -87,12 +90,14 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#FFFFFF',
     fontSize: 16,
     maxHeight: 120,
     paddingTop: 8,
     paddingBottom: 8,
+    paddingLeft: 12,
     marginLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: 'rgba(16, 163, 127, 0.55)',
   },
   plusButton: {
     width: 32,
@@ -105,7 +110,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#10A37F',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,

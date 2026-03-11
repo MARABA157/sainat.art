@@ -4,18 +4,27 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start",
+    "start:local": "expo start --localhost --port 19000",
     "android": "expo start --android",
+    "android:local": "expo start --localhost --port 19000 --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "web:local": "expo start --web --localhost --port 19006"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@supabase/supabase-js": "^2.47.10",
     "expo": "~55.0.5",
+    "expo-auth-session": "~6.0.3",
+    "expo-crypto": "~14.0.1",
     "expo-linking": "~55.0.7",
     "expo-status-bar": "~55.0.4",
+    "expo-web-browser": "~14.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
+    "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.21.0"
   },
   "private": true
