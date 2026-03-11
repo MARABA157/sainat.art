@@ -20,6 +20,7 @@ import ProfileScreen from './ProfileScreen';
 import LoginScreen from './LoginScreen';
 import useChat from '../hooks/useChat';
 import { getTranslations } from '../locales/translations';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 const sidebarWidth = Math.min(width * 0.75, 300);
@@ -133,6 +134,7 @@ const chatThemes = [
 export default function ChatScreen() {
   const currentLanguage = 'tr';
   const t = getTranslations(currentLanguage);
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -143,6 +145,15 @@ export default function ChatScreen() {
   const { messages, isTyping, sendMessage, startNewChat, conversations, currentConversationId, selectConversation } = useChat(t);
   const flatListRef = useRef(null);
   const theme = selectedChatTheme.palette === 'dark' ? themes.dark : themes.light;
+  const prevUserRef = useRef(null);
+
+  useEffect(() => {
+    if (user && !prevUserRef.current) {
+      // Yeni giriş yapıldı, profil sayfasını aç
+      setShowProfile(true);
+    }
+    prevUserRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     if (flatListRef.current && messages.length > 0) {

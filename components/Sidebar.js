@@ -110,15 +110,6 @@ export default function Sidebar({
             <Text style={styles.premiumText}>{t.sidebar.upgrade}</Text>
           </TouchableOpacity>
 
-          {user && (
-            <TouchableOpacity style={styles.footerItem} onPress={onProfilePress}>
-              <Ionicons name="person-outline" size={20} color={theme.sidebarMutedText} />
-              <Text style={[styles.footerText, { color: theme.sidebarText }]}>{t.sidebar.profile}</Text>
-              <View style={styles.footerSpacer} />
-              <Ionicons name="chevron-forward-outline" size={18} color={theme.sidebarMutedText} />
-            </TouchableOpacity>
-          )}
-
           <TouchableOpacity
             style={styles.footerItem}
             onPress={() => {
@@ -250,6 +241,15 @@ export default function Sidebar({
                 </View>
               )}
             </View>
+          )}
+
+          {user && (
+            <TouchableOpacity style={styles.footerItem} onPress={onProfilePress}>
+              <Ionicons name="person-outline" size={20} color={theme.sidebarMutedText} />
+              <Text style={[styles.footerText, { color: theme.sidebarText }]}>{t.sidebar.profile}</Text>
+              <View style={styles.footerSpacer} />
+              <Ionicons name="chevron-forward-outline" size={18} color={theme.sidebarMutedText} />
+            </TouchableOpacity>
           )}
         </View>
       </View>
