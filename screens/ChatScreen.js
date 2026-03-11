@@ -18,6 +18,7 @@ import Sidebar from '../components/Sidebar';
 import PremiumScreen from './PremiumScreen';
 import ProfileScreen from './ProfileScreen';
 import LoginScreen from './LoginScreen';
+import AIFileScreen from './AIFileScreen';
 import useChat from '../hooks/useChat';
 import { getTranslations } from '../locales/translations';
 import { useAuth } from '../contexts/AuthContext';
@@ -138,11 +139,12 @@ export default function ChatScreen() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAIFile, setShowAIFile] = useState(false);
   const [selectedChatTheme, setSelectedChatTheme] = useState(
     chatThemes.find((item) => item.id === 'chatgpt') || chatThemes[0]
   );
   const [showLogin, setShowLogin] = useState(false);
-  const { messages, isTyping, sendMessage, startNewChat, conversations, currentConversationId, selectConversation } = useChat(t);
+  const { messages, isTyping, sendMessage, startNewChat } = useChat(t);
   const flatListRef = useRef(null);
   const theme = selectedChatTheme.palette === 'dark' ? themes.dark : themes.light;
   const prevUserRef = useRef(null);
@@ -150,12 +152,8 @@ export default function ChatScreen() {
   useEffect(() => {
     // Giriş durumu değiştiğinde kontrol et
     if (user && !prevUserRef.current) {
-      // Yeni giriş yapıldı, önce login modalı kapat sonra profili aç
+      // Yeni giriş yapıldı, sadece login modalı kapat
       setShowLogin(false);
-      // Kısa bir gecikme ile profil sayfasını aç
-      setTimeout(() => {
-        setShowProfile(true);
-      }, 100);
     }
     prevUserRef.current = user;
   }, [user]);
@@ -174,6 +172,10 @@ export default function ChatScreen() {
       theme={theme}
     />
   );
+
+  const handleAIFilePress = () => {
+    setShowAIFile(true);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.screenBackground }]}>
@@ -196,9 +198,6 @@ export default function ChatScreen() {
         onSelectChatTheme={setSelectedChatTheme}
         selectedChatTheme={selectedChatTheme}
         chatThemes={chatThemes}
-        conversations={conversations}
-        onSelectConversation={selectConversation}
-        currentConversationId={currentConversationId}
         t={t}
         theme={theme}
       />
@@ -213,6 +212,7 @@ export default function ChatScreen() {
           onNewChat={startNewChat}
           onProfilePress={() => setShowProfile(true)}
           onLoginPress={() => setShowLogin(true)}
+          onAIFilePress={handleAIFilePress}
           t={t}
           theme={theme}
         />
@@ -272,6 +272,16 @@ export default function ChatScreen() {
           t={t}
           theme={theme}
         />
+      )}
+      {showAIFile && (
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={showAIFile}
+          onRequestClose={() => setShowAIFile(false)}
+        >
+          <AIFileScreen onClose={() => setShowAIFile(false)} t={t} theme={theme} />
+        </Modal>
       )}
     {showLogin && (
         <Modal

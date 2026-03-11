@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicat
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Header({ onMenuPress, onNewChat, onProfilePress, onLoginPress, t, theme }) {
+export default function Header({ onMenuPress, onNewChat, onProfilePress, onLoginPress, onAIFilePress, t, theme }) {
   const { user, signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +29,11 @@ export default function Header({ onMenuPress, onNewChat, onProfilePress, onLogin
       </View>
 
       <View style={styles.actions}>
+        {/* AI File Button */}
+        <TouchableOpacity style={styles.aiFileButton} onPress={onAIFilePress}>
+          <Ionicons name="folder-open" size={20} color={theme.headerIcon} />
+        </TouchableOpacity>
+        
         {user ? (
           <TouchableOpacity style={styles.profileButton} onPress={onProfilePress}>
             {user.user_metadata?.avatar_url ? (
@@ -96,6 +101,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  aiFileButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
   },
   loginButton: {
     height: 36,

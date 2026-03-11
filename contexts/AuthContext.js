@@ -113,11 +113,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Local test login - development only
+  const signInTestUser = async () => {
+    const mockUser = {
+      id: 'test-user-123',
+      email: 'test@example.com',
+      user_metadata: {
+        full_name: 'Test Kullanıcı',
+        avatar_url: null,
+      },
+      created_at: new Date().toISOString(),
+    };
+    
+    setUser(mockUser);
+    setSession({ user: mockUser });
+  };
+
   const value = {
     user,
     session,
     loading,
     signInWithGoogle,
+    signInTestUser,
     signOut,
   };
 

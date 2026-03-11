@@ -22,9 +22,12 @@ export default function useChat(t) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log('useChat user effect - user:', user?.id);
     if (user) {
+      console.log('User exists, loading conversations...');
       loadConversations();
     } else {
+      console.log('No user, clearing conversations');
       setConversations([]);
       setMessages([]);
       setCurrentConversationId(null);
@@ -40,13 +43,19 @@ export default function useChat(t) {
   const loadConversations = async () => {
     try {
       setLoading(true);
+      console.log('Loading conversations for user:', user?.id);
       const { data, error } = await supabase
         .from('conversations')
         .select('*')
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error loading conversations:', error);
+        throw error;
+      }
+      
+      console.log('Conversations loaded:', data);
       setConversations(data || []);
       
       if (data && data.length > 0 && !currentConversationId) {

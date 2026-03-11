@@ -64,46 +64,6 @@ export default function Sidebar({
 
         <View style={[styles.divider, { backgroundColor: theme.sidebarBorder }]} />
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.sidebarMutedText }]}>
-            {conversations.length > 0 ? t.sidebar.history || 'Geçmiş' : t.sidebar.today}
-          </Text>
-          
-          {conversations.length === 0 ? (
-            <TouchableOpacity style={styles.chatItem} onPress={onNewChat}>
-              <Ionicons name="chatbubble-outline" size={16} color={theme.sidebarMutedText} />
-              <Text style={[styles.chatText, { color: theme.sidebarText }]}>{t.sidebar.newChat}</Text>
-            </TouchableOpacity>
-          ) : (
-            conversations.map((conv) => (
-              <TouchableOpacity 
-                key={conv.id} 
-                style={[
-                  styles.chatItem,
-                  currentConversationId === conv.id && [styles.chatItemActive, { backgroundColor: theme.sidebarPremiumBackground }]
-                ]}
-                onPress={() => onSelectConversation && onSelectConversation(conv.id)}
-              >
-                <Ionicons 
-                  name="chatbubble-outline" 
-                  size={16} 
-                  color={currentConversationId === conv.id ? theme.sidebarText : theme.sidebarMutedText} 
-                />
-                <Text 
-                  style={[
-                    styles.chatText, 
-                    { color: currentConversationId === conv.id ? theme.sidebarText : theme.sidebarMutedText }
-                  ]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {conv.title || 'Yeni Sohbet'}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-
         <View style={[styles.footer, { borderTopColor: theme.sidebarBorder }]}>
           <TouchableOpacity style={[styles.premiumButton, { backgroundColor: theme.sidebarPremiumBackground }]} onPress={onPremium}>
             <Ionicons name="star" size={20} color="#FFD700" />

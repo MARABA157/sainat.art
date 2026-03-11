@@ -9,335 +9,403 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const aiModels = [
-  { id: 'deepseek', labelKey: 'deepseek', icon: 'sparkles', color: '#4F46E5' },
-  { id: 'gemini', labelKey: 'gemini', icon: 'planet', color: '#4285F4' },
-  { id: 'chatgpt', labelKey: 'chatgpt', icon: 'chatbubble', color: '#10A37F' },
+// AI Provider'ların renkleri ve ikonları
+const AI_MODELS = [
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    color: '#4D6BFA',
+    icon: '🔍',
+    models: {
+      text: [
+        { id: 'deepseek-v3', name: 'DeepSeek V3', description: 'Genel amaçlı' },
+        { id: 'deepseek-r1', name: 'DeepSeek R1', description: 'Akıl yürütme' },
+      ],
+      image: [
+        { id: 'deepseek-v3-vision', name: 'DeepSeek V3 Vision', description: 'Görsel analizi' },
+        { id: 'deepseek-r1-vision', name: 'DeepSeek R1 Vision', description: 'Görsel akıl yürütme' },
+      ],
+      video: [
+        { id: 'deepseek-video', name: 'DeepSeek Video', description: 'Video oluşturma' },
+        { id: 'deepseek-video-pro', name: 'DeepSeek Video Pro', description: 'Profesyonel video' },
+      ],
+      music: [
+        { id: 'deepseek-audio', name: 'DeepSeek Audio', description: 'Ses analizi' },
+        { id: 'deepseek-music', name: 'DeepSeek Music', description: 'Müzik oluşturma' },
+      ],
+    },
+  },
+  {
+    id: 'gemini',
+    name: 'Gemini',
+    color: '#4285F4',
+    icon: '✨',
+    models: {
+      text: [
+        { id: 'gemini-flash', name: '2.0 Flash', description: 'Hızlı yanıt' },
+        { id: 'gemini-pro', name: '1.5 Pro', description: 'Gelişmiş' },
+      ],
+      image: [
+        { id: 'gemini-pro-vision', name: '1.5 Pro Vision', description: 'Görsel anlama' },
+        { id: 'gemini-flash-vision', name: '2.0 Flash Vision', description: 'Hızlı görsel' },
+      ],
+      video: [
+        { id: 'gemini-video', name: 'Gemini Video', description: 'Video analizi' },
+        { id: 'gemini-video-pro', name: 'Gemini Video Pro', description: 'Gelişmiş video' },
+      ],
+      music: [
+        { id: 'gemini-audio', name: 'Gemini Audio', description: 'Ses tanıma' },
+        { id: 'gemini-music', name: 'Gemini Music', description: 'Müzik oluşturma' },
+      ],
+    },
+  },
+  {
+    id: 'chatgpt',
+    name: 'ChatGPT',
+    color: '#10A37F',
+    icon: '💬',
+    models: {
+      text: [
+        { id: 'gpt-4o', name: 'GPT-4o', description: 'En yetenekli' },
+        { id: 'o3-mini', name: 'o3-mini', description: 'Akıl yürütme' },
+      ],
+      image: [
+        { id: 'gpt-4o-vision', name: 'GPT-4o Vision', description: 'Görsel anlama' },
+        { id: 'dall-e-3', name: 'DALL-E 3', description: 'Görsel oluşturma' },
+      ],
+      video: [
+        { id: 'gpt-4o-video', name: 'GPT-4o Video', description: 'Video analizi' },
+        { id: 'sora', name: 'Sora', description: 'Video oluşturma' },
+      ],
+      music: [
+        { id: 'gpt-4o-audio', name: 'GPT-4o Audio', description: 'Ses analizi' },
+        { id: 'music-gen', name: 'MusicGen', description: 'Müzik oluşturma' },
+      ],
+    },
+  },
 ];
 
-const deepseekChatModels = [
-  { id: 'deepseek-v3', labelKey: 'v3', parentId: 'deepseek', icon: 'sparkles', color: '#6366F1' },
-  { id: 'deepseek-r1', labelKey: 'r1', parentId: 'deepseek', icon: 'flash', color: '#7C3AED' },
+const MEDIA_TYPES = [
+  { id: 'text', icon: 'chatbubble', label: 'Sohbet', color: '#10A37F' },
+  { id: 'image', icon: 'image', label: 'Görsel', color: '#8B5CF6' },
+  { id: 'video', icon: 'videocam', label: 'Video', color: '#EF4444' },
+  { id: 'music', icon: 'musical-note', label: 'Müzik', color: '#F59E0B' },
 ];
 
-const geminiChatModels = [
-  { id: 'gemini-2-flash', labelKey: 'flash', parentId: 'gemini', icon: 'flash', color: '#4285F4' },
-  { id: 'gemini-1-5-pro', labelKey: 'pro', parentId: 'gemini', icon: 'planet', color: '#2563EB' },
-];
+export default function ModelMenu({ t, theme, selectedModel, onSelectModel }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState(selectedModel?.provider || 'chatgpt');
+  const [mediaType, setMediaType] = useState('text');
 
-const chatgptChatModels = [
-  { id: 'gpt-4o', labelKey: 'gpt4o', parentId: 'chatgpt', icon: 'chatbubble', color: '#10A37F' },
-  { id: 'o3-mini', labelKey: 'o3mini', parentId: 'chatgpt', icon: 'sparkles', color: '#059669' },
-];
+  const handleSelect = (providerId, modelId) => {
+    onSelectModel?.({ provider: providerId, model: modelId });
+    setSelectedProvider(providerId);
+    setIsOpen(false);
+  };
 
-const mediaTypes = [
-  { id: 'image', labelKey: 'image', icon: 'image', color: '#E91E63' },
-  { id: 'video', labelKey: 'video', icon: 'videocam', color: '#FF5722' },
-  { id: 'music', labelKey: 'music', icon: 'musical-notes', color: '#9C27B0' },
-];
+  const provider = AI_MODELS.find(p => p.id === selectedProvider);
 
-const imageGenerationModels = [
-  { id: 'gemini-image', labelKey: 'gemini', parentId: 'image', icon: 'planet', color: '#4285F4' },
-  { id: 'chatgpt-image', labelKey: 'chatgpt', parentId: 'image', icon: 'sparkles', color: '#10A37F' },
-  { id: 'deepseek-image', labelKey: 'deepseek', parentId: 'image', icon: 'image', color: '#6366F1' },
-];
-
-const videoGenerationModels = [
-  { id: 'gemini-video', labelKey: 'gemini', parentId: 'video', icon: 'videocam', color: '#4285F4' },
-  { id: 'chatgpt-video', labelKey: 'chatgpt', parentId: 'video', icon: 'film', color: '#10A37F' },
-  { id: 'deepseek-video', labelKey: 'deepseek', parentId: 'video', icon: 'play', color: '#6366F1' },
-];
-
-const musicGenerationModels = [
-  { id: 'gemini-music', labelKey: 'gemini', parentId: 'music', icon: 'musical-note', color: '#4285F4' },
-];
-
-export default function ModelMenu({ isVisible, onClose, onSelect, t }) {
-  const [deepseekOpen, setDeepseekOpen] = useState(false);
-  const [geminiOpen, setGeminiOpen] = useState(false);
-  const [chatgptOpen, setChatgptOpen] = useState(false);
-  const [imageOpen, setImageOpen] = useState(false);
-  const [videoOpen, setVideoOpen] = useState(false);
-  const [musicOpen, setMusicOpen] = useState(false);
-
-  const handleSelect = (item) => {
-    onSelect(item);
-    setDeepseekOpen(false);
-    setGeminiOpen(false);
-    setChatgptOpen(false);
-    setImageOpen(false);
-    setVideoOpen(false);
-    setMusicOpen(false);
-    onClose();
+  // Default theme values to prevent undefined errors
+  const safeTheme = {
+    headerText: theme?.headerText || '#FFFFFF',
+    headerIcon: theme?.headerIcon || '#FFFFFF',
+    screenBackground: theme?.screenBackground || '#343541',
+    sidebarBackground: theme?.sidebarBackground || '#202123',
+    sidebarText: theme?.sidebarText || '#FFFFFF',
+    sidebarBorder: theme?.sidebarBorder || '#4D4D4F',
+    sidebarMutedText: theme?.sidebarMutedText || '#8E8EA0',
+    sidebarPremiumBackground: theme?.sidebarPremiumBackground || '#2D2D2D',
   };
 
   return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity style={styles.overlay} onPress={onClose}>
-        <View style={styles.menuContainer}>
-          <View style={styles.menu}>
-            <Text style={styles.sectionTitle}>{t.modelMenu.title}</Text>
+    <>
+      <TouchableOpacity style={styles.button} onPress={() => setIsOpen(true)}>
+        <View style={[styles.buttonIconContainer, { 
+          backgroundColor: provider?.color + '15' || '#10A37F15',
+          borderColor: provider?.color || '#10A37F'
+        }]}>
+          <View style={[styles.iconInner, { backgroundColor: provider?.color || '#10A37F' }]}>
+            <Text style={styles.buttonEmojiIcon}>{provider?.icon || '🤖'}</Text>
+          </View>
+        </View>
+        <Text style={[styles.buttonText, { color: safeTheme.headerText }]}>
+          {provider?.name || 'AI Seç'}
+        </Text>
+        <Ionicons name="chevron-down" size={16} color={safeTheme.headerIcon} style={styles.chevron} />
+      </TouchableOpacity>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-              {aiModels.map((model) => {
-                const isDeepSeek = model.id === 'deepseek';
-                const isGemini = model.id === 'gemini';
-                const isChatGpt = model.id === 'chatgpt';
-                const isOpen = isDeepSeek ? deepseekOpen : isGemini ? geminiOpen : isChatGpt ? chatgptOpen : false;
-                const subModels = isDeepSeek
-                  ? deepseekChatModels
-                  : isGemini
-                    ? geminiChatModels
-                    : isChatGpt
-                      ? chatgptChatModels
-                      : [];
-                const translationGroup = isDeepSeek
-                  ? t.modelMenu.deepseekModels
-                  : isGemini
-                    ? t.modelMenu.geminiModels
-                    : t.modelMenu.chatgptModels;
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isOpen}
+        onRequestClose={() => setIsOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: safeTheme.screenBackground }]}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: safeTheme.headerText }]}>
+                Yapay Zeka Seç
+              </Text>
+              <TouchableOpacity onPress={() => setIsOpen(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={safeTheme.headerIcon} />
+              </TouchableOpacity>
+            </View>
 
-                return (
-                  <View key={model.id}>
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={() => {
-                        if (isDeepSeek) {
-                          setDeepseekOpen((prev) => !prev);
-                          return;
-                        }
+            {/* Media Type Selector */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaTypeSelector}>
+              {MEDIA_TYPES.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={[
+                    styles.mediaTypeButton,
+                    {
+                      backgroundColor: mediaType === type.id ? type.color + '20' : 'transparent',
+                      borderColor: type.color,
+                    },
+                  ]}
+                  onPress={() => setMediaType(type.id)}
+                >
+                  <Ionicons name={type.icon} size={20} color={type.color} />
+                  <Text style={[styles.mediaTypeText, { color: safeTheme.sidebarText }]}>
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
-                        if (isGemini) {
-                          setGeminiOpen((prev) => !prev);
-                          return;
-                        }
+            {/* AI Providers List */}
+            <ScrollView style={styles.providersList} showsVerticalScrollIndicator={false}>
+              {AI_MODELS.map((provider) => (
+                <View key={provider.id} style={styles.providerSection}>
+                  <TouchableOpacity
+                    style={[
+                      styles.providerHeader,
+                      {
+                        backgroundColor: selectedProvider === provider.id ? provider.color + '15' : 'transparent',
+                        borderColor: provider.color,
+                      },
+                    ]}
+                    onPress={() => setSelectedProvider(provider.id)}
+                  >
+                    <Text style={styles.providerIcon}>{provider.icon}</Text>
+                    <Text style={[styles.providerName, { color: safeTheme.sidebarText }]}>
+                      {provider.name}
+                    </Text>
+                    <Ionicons
+                      name={selectedProvider === provider.id ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                      size={20}
+                      color={provider.color}
+                    />
+                  </TouchableOpacity>
 
-                        if (isChatGpt) {
-                          setChatgptOpen((prev) => !prev);
-                          return;
-                        }
-
-                        handleSelect(model);
-                      }}
-                    >
-                      <View style={[styles.iconContainer, { backgroundColor: model.color }]}>
-                        <Ionicons name={model.icon} size={20} color="#FFFFFF" />
-                      </View>
-                      <Text style={styles.menuItemText}>{t.modelMenu.aiModels[model.labelKey]}</Text>
-                      <Ionicons
-                        name={isOpen ? 'chevron-up' : 'chevron-forward'}
-                        size={20}
-                        color="#8E8EA0"
-                      />
-                    </TouchableOpacity>
-                    {isOpen && (
-                      <View style={styles.subMenu}>
-                        {subModels.map((subModel) => (
-                          <TouchableOpacity
-                            key={subModel.id}
-                            style={styles.subMenuItem}
-                            onPress={() => handleSelect(subModel)}
-                          >
-                            <View style={[styles.subIconContainer, { backgroundColor: subModel.color }]}>
-                              <Ionicons name={subModel.icon} size={16} color="#FFFFFF" />
-                            </View>
-                            <Text style={styles.subMenuItemText}>
-                              {translationGroup[subModel.labelKey]}
+                  {selectedProvider === provider.id && (
+                    <View style={styles.modelsList}>
+                      {provider.models[mediaType].map((model) => (
+                        <TouchableOpacity
+                          key={model.id}
+                          style={[
+                            styles.modelItem,
+                            {
+                              backgroundColor: selectedModel?.model === model.id ? provider.color + '15' : 'transparent',
+                              borderColor: safeTheme.sidebarBorder,
+                            },
+                          ]}
+                          onPress={() => handleSelect(provider.id, model.id)}
+                        >
+                          <View>
+                            <Text style={[styles.modelName, { color: safeTheme.sidebarText }]}>
+                              {model.name}
                             </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-
-              <View style={styles.divider} />
-
-              {mediaTypes.map((media) => {
-                const isImage = media.id === 'image';
-                const isVideo = media.id === 'video';
-                const isMusic = media.id === 'music';
-
-                return (
-                  <View key={media.id}>
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      onPress={() => {
-                        if (isImage) {
-                          setImageOpen((prev) => !prev);
-                          return;
-                        }
-
-                        if (isVideo) {
-                          setVideoOpen((prev) => !prev);
-                          return;
-                        }
-
-                        if (isMusic) {
-                          setMusicOpen((prev) => !prev);
-                          return;
-                        }
-
-                        handleSelect(media);
-                      }}
-                    >
-                      <View style={[styles.iconContainer, { backgroundColor: media.color }]}>
-                        <Ionicons name={media.icon} size={20} color="#FFFFFF" />
-                      </View>
-                      <Text style={styles.menuItemText}>{t.modelMenu.mediaTypes[media.labelKey]}</Text>
-                      <Ionicons
-                        name={isImage && imageOpen ? 'chevron-up' : isVideo && videoOpen ? 'chevron-up' : isMusic && musicOpen ? 'chevron-up' : 'chevron-forward'}
-                        size={20}
-                        color="#8E8EA0"
-                      />
-                    </TouchableOpacity>
-                    {isImage && imageOpen && (
-                      <View style={styles.subMenu}>
-                        {imageGenerationModels.map((imageModel) => (
-                          <TouchableOpacity
-                            key={imageModel.id}
-                            style={styles.subMenuItem}
-                            onPress={() => handleSelect(imageModel)}
-                          >
-                            <View style={[styles.subIconContainer, { backgroundColor: imageModel.color }]}>
-                              <Ionicons name={imageModel.icon} size={16} color="#FFFFFF" />
-                            </View>
-                            <Text style={styles.subMenuItemText}>
-                              {t.modelMenu.imageModels[imageModel.labelKey]}
+                            <Text style={[styles.modelDescription, { color: safeTheme.sidebarMutedText }]}>
+                              {model.description}
                             </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                    {isVideo && videoOpen && (
-                      <View style={styles.subMenu}>
-                        {videoGenerationModels.map((videoModel) => (
-                          <TouchableOpacity
-                            key={videoModel.id}
-                            style={styles.subMenuItem}
-                            onPress={() => handleSelect(videoModel)}
-                          >
-                            <View style={[styles.subIconContainer, { backgroundColor: videoModel.color }]}>
-                              <Ionicons name={videoModel.icon} size={16} color="#FFFFFF" />
-                            </View>
-                            <Text style={styles.subMenuItemText}>
-                              {t.modelMenu.videoModels[videoModel.labelKey]}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                    {isMusic && musicOpen && (
-                      <View style={styles.subMenu}>
-                        {musicGenerationModels.map((musicModel) => (
-                          <TouchableOpacity
-                            key={musicModel.id}
-                            style={styles.subMenuItem}
-                            onPress={() => handleSelect(musicModel)}
-                          >
-                            <View style={[styles.subIconContainer, { backgroundColor: musicModel.color }]}>
-                              <Ionicons name={musicModel.icon} size={16} color="#FFFFFF" />
-                            </View>
-                            <Text style={styles.subMenuItemText}>
-                              {t.modelMenu.musicModels[musicModel.labelKey]}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
+                          </View>
+                          {selectedModel?.model === model.id && (
+                            <Ionicons name="checkmark" size={16} color={provider.color} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
             </ScrollView>
           </View>
         </View>
-      </TouchableOpacity>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  menuContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 100,
-  },
-  menu: {
-    backgroundColor: '#40414F',
-    borderRadius: 16,
-    padding: 16,
-    maxHeight: 400,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 16,
-    paddingHorizontal: 8,
-  },
-  scrollView: {
-    maxHeight: 350,
-  },
-  menuItem: {
+  button: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 24,
+    backgroundColor: 'transparent',
+    gap: 8,
   },
-  iconContainer: {
+  buttonIconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    borderWidth: 2,
+    padding: 2,
   },
-  menuItemText: {
+  iconInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonEmojiIcon: {
+    fontSize: 18,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  chevron: {
+    marginLeft: 4,
+  },
+  modalOverlay: {
     flex: 1,
-    fontSize: 16,
-    color: '#FFFFFF',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
-  subMenu: {
-    marginLeft: 18,
-    marginBottom: 8,
-    paddingLeft: 18,
-    borderLeftWidth: 1,
-    borderLeftColor: '#4D4D4F',
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 30,
+    maxHeight: '80%',
   },
-  subMenuItem: {
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  mediaTypeContainer: {
+    marginBottom: 20,
+  },
+  mediaTypeButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    marginRight: 10,
+    gap: 6,
   },
-  subIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+  mediaTypeText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  providersList: {
+    maxHeight: 400,
+  },
+  providerSection: {
+    marginBottom: 12,
+  },
+  providerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  providerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  providerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
   },
-  subMenuItemText: {
+  providerIconText: {
+    fontSize: 22,
+  },
+  providerName: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  providerSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  providerBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modelsList: {
+    marginTop: 8,
+    paddingLeft: 56,
+    gap: 8,
+  },
+  modelButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  modelInfo: {
+    flex: 1,
+  },
+  modelName: {
     fontSize: 15,
-    color: '#E5E7EB',
+    fontWeight: '600',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#4D4D4F',
-    marginVertical: 12,
-    marginHorizontal: 8,
+  modelDescription: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  checkmark: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  providerIcon: {
+    fontSize: 22,
+  },
+  modelItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  sectionItemBorder: {
+    borderBottomWidth: 1,
   },
 });
