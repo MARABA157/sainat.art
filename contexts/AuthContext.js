@@ -2,12 +2,18 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Platform } from 'react-native';
 import { supabase } from '../config/supabase';
 
-// Web platformunda expo paketlerini import etme
-let WebBrowser, Linking;
+// Web platformu için güvenli import
+let WebBrowser = null;
+let Linking = null;
+
 if (Platform.OS !== 'web') {
-  WebBrowser = require('expo-web-browser');
-  Linking = require('expo-linking');
-  WebBrowser.maybeCompleteAuthSession();
+  try {
+    WebBrowser = require('expo-web-browser');
+    Linking = require('expo-linking');
+    WebBrowser.maybeCompleteAuthSession();
+  } catch (e) {
+    console.warn('Expo packages not available:', e);
+  }
 }
 
 const AuthContext = createContext({});
@@ -54,6 +60,10 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Native platformda WebBrowser kullan
+      if (!Linking || !WebBrowser) {
+        throw new Error('Native auth packages not available');
+      }
+
       const redirectUrl = Linking.createURL('/auth/callback');
       
       const { data, error } = await supabase.auth.signInWithOAuth({
