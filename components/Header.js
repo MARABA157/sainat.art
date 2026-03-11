@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicat
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function Header({ onMenuPress, onNewChat, onProfilePress, t, theme }) {
+export default function Header({ onMenuPress, onNewChat, onProfilePress, onLoginPress, t, theme }) {
   const { user, signInWithGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -12,7 +12,7 @@ export default function Header({ onMenuPress, onNewChat, onProfilePress, t, them
       setLoading(true);
       await signInWithGoogle();
     } catch (error) {
-      Alert.alert(t.auth.signInError, error.message);
+      Alert.alert(t.auth?.signInError || 'Giriş Hatası', error.message);
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export default function Header({ onMenuPress, onNewChat, onProfilePress, t, them
                 backgroundColor: '#10A37F',
               },
             ]}
-            onPress={handleLogin}
+            onPress={onLoginPress || handleLogin}
             disabled={loading}
           >
             {loading ? (

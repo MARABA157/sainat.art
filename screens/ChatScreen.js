@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   ImageBackground,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Header from '../components/Header';
@@ -16,6 +17,7 @@ import ChatInput from '../components/ChatInput';
 import Sidebar from '../components/Sidebar';
 import PremiumScreen from './PremiumScreen';
 import ProfileScreen from './ProfileScreen';
+import LoginScreen from './LoginScreen';
 import useChat from '../hooks/useChat';
 import { getTranslations } from '../locales/translations';
 
@@ -137,7 +139,8 @@ export default function ChatScreen() {
   const [selectedChatTheme, setSelectedChatTheme] = useState(
     chatThemes.find((item) => item.id === 'chatgpt') || chatThemes[0]
   );
-  const { messages, isTyping, sendMessage, startNewChat } = useChat(t);
+  const [showLogin, setShowLogin] = useState(false);
+  const { messages, isTyping, sendMessage, startNewChat, conversations, currentConversationId, selectConversation } = useChat(t);
   const flatListRef = useRef(null);
   const theme = selectedChatTheme.palette === 'dark' ? themes.dark : themes.light;
 
@@ -177,6 +180,9 @@ export default function ChatScreen() {
         onSelectChatTheme={setSelectedChatTheme}
         selectedChatTheme={selectedChatTheme}
         chatThemes={chatThemes}
+        conversations={conversations}
+        onSelectConversation={selectConversation}
+        currentConversationId={currentConversationId}
         t={t}
         theme={theme}
       />
@@ -190,6 +196,7 @@ export default function ChatScreen() {
           onMenuPress={() => setSidebarOpen((prev) => !prev)}
           onNewChat={startNewChat}
           onProfilePress={() => setShowProfile(true)}
+          onLoginPress={() => setShowLogin(true)}
           t={t}
           theme={theme}
         />
@@ -249,6 +256,16 @@ export default function ChatScreen() {
           t={t}
           theme={theme}
         />
+      )}
+    {showLogin && (
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={showLogin}
+          onRequestClose={() => setShowLogin(false)}
+        >
+          <LoginScreen onClose={() => setShowLogin(false)} />
+        </Modal>
       )}
     </SafeAreaView>
   );

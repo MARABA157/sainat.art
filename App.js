@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { AuthProvider } from './contexts/AuthContext';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ChatScreen from './screens/ChatScreen';
 
 class ErrorBoundary extends React.Component {
@@ -33,11 +33,25 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+function AppContent() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#10A37F" />
+      </View>
+    );
+  }
+
+  return <ChatScreen />;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ChatScreen />
+        <AppContent />
       </AuthProvider>
     </ErrorBoundary>
   );
