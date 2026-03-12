@@ -1,20 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { Platform } from 'react-native';
 import { supabase } from '../config/supabase';
-
-// Web platformu için güvenli import
-let WebBrowser = null;
-let Linking = null;
-
-if (Platform.OS !== 'web') {
-  try {
-    WebBrowser = require('expo-web-browser');
-    Linking = require('expo-linking');
-    WebBrowser.maybeCompleteAuthSession();
-  } catch (e) {
-    console.warn('Expo packages not available:', e);
-  }
-}
 
 const AuthContext = createContext({});
 
@@ -41,64 +26,17 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithGoogle = async () => {
     try {
-      // Web platformunda doğrudan yönlendirme
-      if (Platform.OS === 'web') {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-
-        if (error) throw error;
-        
-        // Web'de doğrudan yönlendirme yapılacak
-        if (data?.url) {
-          window.location.href = data.url;
-        }
-        return;
-      }
-
-      // Native platformda WebBrowser kullan
-      if (!Linking || !WebBrowser) {
-        throw new Error('Native auth packages not available');
-      }
-
-      const redirectUrl = Linking.createURL('auth/callback');
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: false,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (error) throw error;
-
+      
       if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUrl
-        );
-
-        if (result.type === 'success') {
-          const url = result.url;
-          const params = new URLSearchParams(url.split('#')[1]);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-
-          if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-          }
-        } else if (result.type === 'cancel') {
-          throw new Error('Google girişi iptal edildi');
-        } else {
-          throw new Error('Google girişi başarısız oldu');
-        }
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Error signing in with Google:', error);

@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import ChatScreen from './screens/ChatScreen';
+import './App.css';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -20,12 +19,10 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-          <Text style={{ fontSize: 18, marginBottom: 10 }}>Bir hata oluştu</Text>
-          <Text style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
-            {this.state.error?.message || 'Uygulama yüklenirken bir sorun oluştu'}
-          </Text>
-        </View>
+        <div className="error-container">
+          <h2>Bir hata oluştu</h2>
+          <p>{this.state.error?.message || 'Uygulama yüklenirken bir sorun oluştu'}</p>
+        </div>
       );
     }
 
@@ -38,13 +35,18 @@ function AppContent() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#10A37F" />
-      </View>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+      </div>
     );
   }
 
-  return <ChatScreen />;
+  return (
+    <div className="app">
+      <h1>Sainat AI</h1>
+      <p>Uygulama başarıyla yüklendi!</p>
+    </div>
+  );
 }
 
 export default function App() {
