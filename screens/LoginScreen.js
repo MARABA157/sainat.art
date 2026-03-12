@@ -29,10 +29,20 @@ export default function LoginScreen({ onClose }) {
       await signInWithGoogle();
       onClose?.();
     } catch (error) {
-      Alert.alert(
-        'Giriş Hatası',
-        error.message || 'Google ile giriş yapılırken bir hata oluştu.'
-      );
+      console.error('Google sign-in error:', error);
+      let errorMessage = 'Google ile giriş yapılırken bir hata oluştu.';
+      
+      if (error.message?.includes('cancel')) {
+        errorMessage = 'Google girişi iptal edildi.';
+      } else if (error.message?.includes('network')) {
+        errorMessage = 'İnternet bağlantısı hatatı. Lütfen bağlantınızı kontrol edin.';
+      } else if (error.message?.includes('popup')) {
+        errorMessage = 'Google popup penceresi açılamadı. Lütfen tarayıcı ayarlarınızı kontrol edin.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Giriş Hatası', errorMessage);
     }
   };
 

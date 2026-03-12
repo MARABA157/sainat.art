@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin,
+            redirectTo: `${window.location.origin}/auth/callback`,
           },
         });
 
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Native auth packages not available');
       }
 
-      const redirectUrl = Linking.createURL('/auth/callback');
+      const redirectUrl = Linking.createURL('auth/callback');
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -94,6 +94,10 @@ export const AuthProvider = ({ children }) => {
               refresh_token: refreshToken,
             });
           }
+        } else if (result.type === 'cancel') {
+          throw new Error('Google girişi iptal edildi');
+        } else {
+          throw new Error('Google girişi başarısız oldu');
         }
       }
     } catch (error) {
