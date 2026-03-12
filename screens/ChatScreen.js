@@ -151,63 +151,6 @@ export default function ChatScreen() {
     },
   };
 
-  const chatThemes = [
-    {
-      id: 'chatgpt',
-      name: 'ChatGPT',
-      palette: 'dark',
-      backgroundColor: '#343541',
-    },
-    {
-      id: 'siyah',
-      name: 'Siyah',
-      palette: 'dark',
-      backgroundColor: '#000000',
-    },
-    {
-      id: 'beyaz',
-      name: 'Beyaz',
-      palette: 'light',
-      backgroundColor: '#FFFFFF',
-    },
-    {
-      id: 'dere-cicegi',
-      name: 'Dere Çiçeği',
-      preview: require('../assets/themes/ai resim 4.jpg'),
-      palette: 'light',
-    },
-    {
-      id: 'gece-patikasi',
-      name: 'Gece Patikası',
-      preview: require('../assets/themes/ai resim 5.jpg'),
-      palette: 'dark',
-    },
-    {
-      id: 'altin-koruluk',
-      name: 'Altın Koruluk',
-      preview: require('../assets/themes/ai resim 6.jpg'),
-      palette: 'light',
-    },
-    {
-      id: 'sisli-vadi',
-      name: 'Sisli Vadi',
-      preview: require('../assets/themes/ai resim 7.jpg'),
-      palette: 'dark',
-    },
-    {
-      id: 'golge-dere',
-      name: 'Gölge Dere',
-      preview: require('../assets/themes/ai resim 8.jpg'),
-      palette: 'dark',
-    },
-    {
-      id: 'yeni-tema',
-      name: 'Yeni Tema',
-      palette: 'dark',
-      backgroundColor: '#123456',
-    },
-  ];
-
   useEffect(() => {
     // Giriş durumu değiştiğinde kontrol et
     if (user && !prevUserRef.current) {
