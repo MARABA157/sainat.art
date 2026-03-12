@@ -93,7 +93,6 @@ export default function ChatScreen() {
   const [showLogin, setShowLogin] = useState(false);
   const { messages, isTyping, sendMessage, startNewChat } = useChat(t);
   const flatListRef = useRef(null);
-  const theme = selectedChatTheme.palette === 'dark' ? themes.dark : themes.light;
   const prevUserRef = useRef(null);
 
   const themes = {
@@ -150,6 +149,8 @@ export default function ChatScreen() {
       sidebarPremiumBackground: '#F3F4F6',
     },
   };
+
+  const theme = selectedChatTheme.palette === 'dark' ? themes.dark : themes.light;
 
   useEffect(() => {
     // Giriş durumu değiştiğinde kontrol et

@@ -2,7 +2,7 @@
 
 [build]
   # Build command for Expo web
-  command = "npx expo export -p web"
+  command = "npm run build"
   # Publish directory for web build
   publish = "dist"
 
@@ -52,9 +52,9 @@
   environment = { NODE_ENV = "production" }
 
 [context.deploy-preview]
-  command = "npx expo export -p web"
+  command = "npm run build"
   environment = { NODE_ENV = "production" }
 
 [context.branch-deploy]
-  command = "npx expo export -p web"
+  command = "npm run build"
   environment = { NODE_ENV = "production" }
