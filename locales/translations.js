@@ -60,34 +60,26 @@ export const translations = {
     modelMenu: {
       title: 'Konuş',
       aiModels: {
-        deepseek: 'DeepSeek',
         gemini: 'Gemini',
         chatgpt: 'ChatGPT',
       },
-      deepseekModels: {
-        v3: 'DeepSeek V3',
-        r1: 'DeepSeek R1',
-      },
       geminiModels: {
         flash: 'Gemini 2.0 Flash',
-        pro: 'Gemini 1.5 Pro',
       },
       chatgptModels: {
         gpt4o: 'GPT-4o',
-        o3mini: 'o3-mini',
       },
       imageModels: {
         gemini: 'Gemini 2.0 Flash Preview Image Generation',
         chatgpt: 'gpt-image-1',
-        deepseek: 'DeepSeek Janus Pro',
       },
       videoModels: {
         gemini: 'Veo 2',
         chatgpt: 'Sora',
-        deepseek: 'DeepSeek Video',
       },
       musicModels: {
         gemini: 'Lyria',
+        chatgpt: 'GPT-4o Audio',
       },
       mediaTypes: {
         image: 'Görüntü',
@@ -205,34 +197,26 @@ export const translations = {
     modelMenu: {
       title: 'Talk',
       aiModels: {
-        deepseek: 'DeepSeek',
         gemini: 'Gemini',
         chatgpt: 'ChatGPT',
       },
-      deepseekModels: {
-        v3: 'DeepSeek V3',
-        r1: 'DeepSeek R1',
-      },
       geminiModels: {
         flash: 'Gemini 2.0 Flash',
-        pro: 'Gemini 1.5 Pro',
       },
       chatgptModels: {
         gpt4o: 'GPT-4o',
-        o3mini: 'o3-mini',
       },
       imageModels: {
         gemini: 'Gemini 2.0 Flash Preview Image Generation',
         chatgpt: 'gpt-image-1',
-        deepseek: 'DeepSeek Janus Pro',
       },
       videoModels: {
         gemini: 'Veo 2',
         chatgpt: 'Sora',
-        deepseek: 'DeepSeek Video',
       },
       musicModels: {
         gemini: 'Lyria',
+        chatgpt: 'GPT-4o Audio',
       },
       mediaTypes: {
         image: 'Image',

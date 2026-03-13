@@ -121,7 +121,9 @@ export default function ChatScreen() {
       sidebarBorder: '#4D4D4F',
       sidebarText: '#FFFFFF',
       sidebarMutedText: '#8E8EA0',
+      sidebarTextSecondary: '#B4B4C1',
       sidebarPremiumBackground: '#2D2D2D',
+      paletteAccent: '#10A37F',
     },
     light: {
       screenBackground: '#F7F7F8',
@@ -147,7 +149,9 @@ export default function ChatScreen() {
       sidebarBorder: '#E5E7EB',
       sidebarText: '#111827',
       sidebarMutedText: '#6B7280',
+      sidebarTextSecondary: '#6B7280',
       sidebarPremiumBackground: '#F3F4F6',
+      paletteAccent: '#10A37F',
     },
   };
 
@@ -215,7 +219,7 @@ export default function ChatScreen() {
         style={[
           styles.main,
           isWeb && styles.webMain,
-          sidebarOpen && !isWeb && { marginLeft: sidebarWidth, width: width - sidebarWidth },
+          sidebarOpen && isWeb && { marginLeft: sidebarWidth, width: width - sidebarWidth },
         ]}
       >
         <Header
@@ -276,13 +280,32 @@ export default function ChatScreen() {
           </View>
         )}
       </View>
-      {showPremium && <PremiumScreen onClose={() => setShowPremium(false)} t={t} />}
+      {showPremium && (
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={showPremium}
+          onRequestClose={() => setShowPremium(false)}
+        >
+          <PremiumScreen onClose={() => setShowPremium(false)} t={t} />
+        </Modal>
+      )}
       {showProfile && (
-        <ProfileScreen
-          onClose={() => setShowProfile(false)}
-          t={t}
-          theme={theme}
-        />
+        <Modal
+          animationType="slide"
+          transparent={false}
+          visible={showProfile}
+          onRequestClose={() => setShowProfile(false)}
+        >
+          <ProfileScreen
+            onClose={() => setShowProfile(false)}
+            t={t}
+            theme={theme}
+            chatThemes={chatThemes}
+            selectedChatTheme={selectedChatTheme}
+            onSelectChatTheme={setSelectedChatTheme}
+          />
+        </Modal>
       )}
       {showAIFile && (
         <Modal

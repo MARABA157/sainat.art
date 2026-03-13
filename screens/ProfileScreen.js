@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,120 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function ProfileScreen({ t, theme, onClose }) {
+export default function ProfileScreen({
+  t,
+  theme,
+  onClose,
+  chatThemes = [],
+  selectedChatTheme,
+  onSelectChatTheme,
+}) {
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [activeSheet, setActiveSheet] = useState(null);
+  const [profileDraft, setProfileDraft] = useState({
+    fullName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
+    role: user?.user_metadata?.role || 'Yapay zeka meraklısı',
+    bio: user?.user_metadata?.bio || 'Üretkenlik, öğrenme ve yaratıcılık için sainat kullanıyor.',
+  });
+
+  const selectedThemeName = selectedChatTheme?.name || t.profile.auto;
+
+  const supportContent = useMemo(
+    () => ({
+      help: {
+        title: t.profile.helpCenter,
+        icon: 'help-buoy',
+        sections: [
+          {
+            heading: 'Sainat ile neler yapabilirsiniz?',
+            body:
+              'Sohbet oluşturabilir, yapay zeka destekli dosya dönüşümleri yapabilir, farklı tema deneyimleri arasında geçiş yapabilir ve hesabınızı tek merkezden yönetebilirsiniz.',
+          },
+          {
+            heading: 'En hızlı başlangıç',
+            body:
+              'Yeni sohbet başlatın, profilinizden tema tercihinizi seçin ve AI Dosya Dönüştürücü ekranından belge, görsel ve metin dosyalarını dönüştürmeyi deneyin.',
+          },
+          {
+            heading: 'Destek gerektiğinde',
+            body:
+              'Giriş, dosya yükleme veya tema davranışıyla ilgili sorunlarda geri bildirim alanını kullanın. Hata adımlarını yazmanız çözümü çok hızlandırır.',
+          },
+        ],
+      },
+      feedback: {
+        title: t.profile.sendFeedback,
+        icon: 'chatbox-ellipses',
+        sections: [
+          {
+            heading: 'Geri bildiriminiz değerli',
+            body:
+              'Sainat deneyimini daha akıllı, daha hızlı ve daha estetik hale getirmek için görüşlerinizi düzenli olarak değerlendiriyoruz.',
+          },
+          {
+            heading: 'En yararlı geri bildirim formatı',
+            body:
+              'Ne yapmaya çalıştığınızı, ne beklediğinizi ve ekranda gerçekte ne olduğunu kısa maddeler halinde yazın. Mümkünse ekran görüntüsü ekleyin.',
+          },
+          {
+            heading: 'Örnek başlıklar',
+            body:
+              '“Profil ekranı açılmıyor”, “Dosya dönüşümü mobilde zayıf”, “Tema kartları daha premium olabilir” gibi net başlıklar çok faydalıdır.',
+          },
+        ],
+      },
+      privacy: {
+        title: t.profile.privacyPolicy,
+        icon: 'shield-checkmark',
+        sections: [
+          {
+            heading: 'Veri yaklaşımımız',
+            body:
+              'Kullanıcı deneyimini geliştirmek için yalnızca gerekli hesap ve oturum verileri işlenir. Erişimler yetkilendirme ve güvenlik kurallarına göre sınırlandırılır.',
+          },
+          {
+            heading: 'Güvenlik ilkeleri',
+            body:
+              'Kimlik doğrulama akışları güvenli redirect ayarları ile korunur. Uygulama içinde hassas anahtarlar gömülü tutulmaz ve oturumlar güvenli şekilde yönetilir.',
+          },
+          {
+            heading: 'Kullanıcı kontrolü',
+            body:
+              'Profil, oturum ve tercih yönetimi kullanıcı kontrolündedir. Hesapla ilişkili işlemlerde şeffaflık ve minimum veri prensibi hedeflenir.',
+          },
+        ],
+      },
+      terms: {
+        title: t.profile.termsOfService,
+        icon: 'document-text',
+        sections: [
+          {
+            heading: 'Kullanım çerçevesi',
+            body:
+              'Sainat üretkenlik, yaratıcılık ve bilgi erişimi amacıyla sunulur. Kullanıcılar sistemi hukuka, platform kurallarına ve etik kullanıma uygun biçimde kullanmalıdır.',
+          },
+          {
+            heading: 'Hizmet kalitesi',
+            body:
+              'Bazı özellikler geliştirme aşamasında olabilir. Uygulama sürekli iyileştirilir ve deneyimi etkileyen hatalar öncelikli olarak ele alınır.',
+          },
+          {
+            heading: 'Sorumlu kullanım',
+            body:
+              'Spam, kötüye kullanım, otomatik saldırı denemeleri ve güvenlik ihlali oluşturabilecek kullanım biçimleri engellenebilir veya sınırlandırılabilir.',
+          },
+        ],
+      },
+    }),
+    [t]
+  );
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -43,13 +150,25 @@ export default function ProfileScreen({ t, theme, onClose }) {
     );
   };
 
+  const openSupportSheet = (sheetKey) => {
+    setActiveSheet(sheetKey);
+  };
+
+  const handleSaveProfile = () => {
+    setActiveSheet(null);
+    Alert.alert(
+      'Profil güncellendi',
+      'Gelişmiş profil düzenleme alanı hazırlandı. Kalıcı kayıt için bu alanı ileride Supabase profil tablosuna bağlayabiliriz.'
+    );
+  };
+
   const profileSections = [
     {
       id: 'account',
       title: t.profile.sections.account,
       items: [
         { id: 'email', icon: 'mail', label: t.profile.email, value: user?.email },
-        { id: 'name', icon: 'person', label: t.profile.name, value: user?.user_metadata?.full_name || t.profile.notSet },
+        { id: 'name', icon: 'person', label: t.profile.name, value: profileDraft.fullName || t.profile.notSet },
         { id: 'joined', icon: 'calendar', label: t.profile.memberSince, value: new Date(user?.created_at).toLocaleDateString() },
       ],
     },
@@ -59,7 +178,7 @@ export default function ProfileScreen({ t, theme, onClose }) {
       items: [
         { id: 'language', icon: 'language', label: t.profile.language, value: 'Türkçe', action: true },
         { id: 'notifications', icon: 'notifications', label: t.profile.notifications, value: t.profile.enabled, action: true },
-        { id: 'theme', icon: 'color-palette', label: t.profile.themePreference, value: t.profile.auto, action: true },
+        { id: 'theme', icon: 'color-palette', label: t.profile.themePreference, value: selectedThemeName, action: true },
       ],
     },
     {
@@ -110,11 +229,24 @@ export default function ProfileScreen({ t, theme, onClose }) {
             )}
           </View>
           <Text style={[styles.userName, { color: theme.headerText }]}>
-            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || t.profile.user}
+            {profileDraft.fullName || user?.email?.split('@')[0] || t.profile.user}
           </Text>
           <Text style={[styles.userEmail, { color: theme.sidebarTextSecondary }]}>
             {user?.email}
           </Text>
+          <Text style={[styles.userMeta, { color: theme.sidebarTextSecondary }]}>
+            {profileDraft.role}
+          </Text>
+          <Text style={[styles.userBio, { color: theme.sidebarMutedText }]}>
+            {profileDraft.bio}
+          </Text>
+          <TouchableOpacity
+            style={[styles.editProfileButton, { backgroundColor: theme.paletteAccent || '#10A37F' }]}
+            onPress={() => setActiveSheet('editProfile')}
+          >
+            <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.editProfileButtonText}>Profili Düzenle</Text>
+          </TouchableOpacity>
         </View>
 
         {profileSections.map((section) => (
@@ -131,7 +263,21 @@ export default function ProfileScreen({ t, theme, onClose }) {
                     index !== section.items.length - 1 && styles.sectionItemBorder,
                     { borderBottomColor: theme.sidebarBorder },
                   ]}
-                  onPress={item.action ? () => {} : null}
+                  onPress={
+                    item.action
+                      ? () => {
+                          if (item.id === 'theme') {
+                            setActiveSheet('theme');
+                            return;
+                          }
+                          if (item.id === 'help' || item.id === 'feedback' || item.id === 'privacy' || item.id === 'terms') {
+                            openSupportSheet(item.id);
+                            return;
+                          }
+                          Alert.alert('Yakında', `${item.label} için gelişmiş ayar ekranı bir sonraki aşamada eklenecek.`);
+                        }
+                      : null
+                  }
                   disabled={!item.action}
                 >
                   <View style={styles.itemLeft}>
@@ -195,6 +341,171 @@ export default function ProfileScreen({ t, theme, onClose }) {
           {t.profile.version} 1.0.0
         </Text>
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent
+        visible={Boolean(activeSheet)}
+        onRequestClose={() => setActiveSheet(null)}
+      >
+        <View style={styles.sheetBackdrop}>
+          <View style={[styles.sheetContainer, { backgroundColor: theme.headerBackground }]}>
+            {activeSheet === 'theme' && (
+              <>
+                <View style={styles.sheetHeader}>
+                  <Text style={[styles.sheetTitle, { color: theme.headerText }]}>Sohbet Teması</Text>
+                  <TouchableOpacity onPress={() => setActiveSheet(null)}>
+                    <Ionicons name="close" size={22} color={theme.sidebarText} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <View style={styles.themeGrid}>
+                    {chatThemes.map((chatTheme) => {
+                      const isSelected = selectedChatTheme?.id === chatTheme.id;
+                      return (
+                        <TouchableOpacity
+                          key={chatTheme.id}
+                          style={[
+                            styles.themeOption,
+                            {
+                              borderColor: isSelected ? theme.paletteAccent || '#10A37F' : theme.sidebarBorder,
+                              backgroundColor: theme.sidebarBackground,
+                            },
+                          ]}
+                          onPress={() => {
+                            onSelectChatTheme?.(chatTheme);
+                            setActiveSheet(null);
+                          }}
+                        >
+                          <View
+                            style={[
+                              styles.themePreview,
+                              {
+                                backgroundColor: chatTheme.preview ? 'transparent' : chatTheme.backgroundColor || theme.screenBackground,
+                              },
+                            ]}
+                          >
+                            {chatTheme.preview ? (
+                              <Image source={chatTheme.preview} style={styles.themePreviewImage} />
+                            ) : null}
+                            {isSelected && (
+                              <View style={styles.themeCheck}>
+                                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                              </View>
+                            )}
+                          </View>
+                          <Text style={[styles.themeOptionTitle, { color: theme.sidebarText }]}>{chatTheme.name}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+              </>
+            )}
+
+            {activeSheet === 'editProfile' && (
+              <>
+                <View style={styles.sheetHeader}>
+                  <Text style={[styles.sheetTitle, { color: theme.headerText }]}>Gelişmiş Profil Düzenle</Text>
+                  <TouchableOpacity onPress={() => setActiveSheet(null)}>
+                    <Ionicons name="close" size={22} color={theme.sidebarText} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.inputLabel, { color: theme.sidebarText }]}>Görünen Ad</Text>
+                  <TextInput
+                    value={profileDraft.fullName}
+                    onChangeText={(value) => setProfileDraft((prev) => ({ ...prev, fullName: value }))}
+                    style={[
+                      styles.textInput,
+                      {
+                        color: theme.sidebarText,
+                        borderColor: theme.sidebarBorder,
+                        backgroundColor: theme.sidebarBackground,
+                      },
+                    ]}
+                    placeholder="Adınızı girin"
+                    placeholderTextColor={theme.sidebarMutedText}
+                  />
+                  <Text style={[styles.inputLabel, { color: theme.sidebarText }]}>Rol / Unvan</Text>
+                  <TextInput
+                    value={profileDraft.role}
+                    onChangeText={(value) => setProfileDraft((prev) => ({ ...prev, role: value }))}
+                    style={[
+                      styles.textInput,
+                      {
+                        color: theme.sidebarText,
+                        borderColor: theme.sidebarBorder,
+                        backgroundColor: theme.sidebarBackground,
+                      },
+                    ]}
+                    placeholder="Örn. Ürün Tasarımcısı"
+                    placeholderTextColor={theme.sidebarMutedText}
+                  />
+                  <Text style={[styles.inputLabel, { color: theme.sidebarText }]}>Kısa Biyografi</Text>
+                  <TextInput
+                    value={profileDraft.bio}
+                    onChangeText={(value) => setProfileDraft((prev) => ({ ...prev, bio: value }))}
+                    multiline
+                    numberOfLines={4}
+                    textAlignVertical="top"
+                    style={[
+                      styles.textArea,
+                      {
+                        color: theme.sidebarText,
+                        borderColor: theme.sidebarBorder,
+                        backgroundColor: theme.sidebarBackground,
+                      },
+                    ]}
+                    placeholder="Kendinizi birkaç cümleyle anlatın"
+                    placeholderTextColor={theme.sidebarMutedText}
+                  />
+                  <TouchableOpacity
+                    style={[styles.primaryActionButton, { backgroundColor: theme.paletteAccent || '#10A37F' }]}
+                    onPress={handleSaveProfile}
+                  >
+                    <Text style={styles.primaryActionText}>Değişiklikleri Kaydet</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </>
+            )}
+
+            {activeSheet && supportContent[activeSheet] && (
+              <>
+                <View style={styles.sheetHeader}>
+                  <View style={styles.sheetTitleRow}>
+                    <Ionicons
+                      name={supportContent[activeSheet].icon}
+                      size={20}
+                      color={theme.paletteAccent || '#10A37F'}
+                    />
+                    <Text style={[styles.sheetTitle, { color: theme.headerText }]}>
+                      {supportContent[activeSheet].title}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setActiveSheet(null)}>
+                    <Ionicons name="close" size={22} color={theme.sidebarText} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {supportContent[activeSheet].sections.map((section) => (
+                    <View
+                      key={section.heading}
+                      style={[
+                        styles.supportCard,
+                        { backgroundColor: theme.sidebarBackground, borderColor: theme.sidebarBorder },
+                      ]}
+                    >
+                      <Text style={[styles.supportHeading, { color: theme.sidebarText }]}>{section.heading}</Text>
+                      <Text style={[styles.supportBody, { color: theme.sidebarTextSecondary }]}>{section.body}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -257,6 +568,31 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: 14,
+  },
+  userMeta: {
+    fontSize: 14,
+    marginTop: 10,
+    fontWeight: '600',
+  },
+  userBio: {
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  editProfileButton: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editProfileButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
   },
   section: {
     marginBottom: 24,
@@ -331,5 +667,110 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     marginBottom: 32,
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'flex-end',
+  },
+  sheetContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28,
+    maxHeight: '82%',
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  sheetTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  themeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  themeOption: {
+    width: '48%',
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 10,
+    marginBottom: 12,
+  },
+  themePreview: {
+    height: 110,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  themePreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  themeCheck: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  themeOptionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 110,
+    marginBottom: 20,
+  },
+  primaryActionButton: {
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  primaryActionText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  supportCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  supportHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  supportBody: {
+    fontSize: 14,
+    lineHeight: 21,
   },
 });

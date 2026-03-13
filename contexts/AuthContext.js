@@ -23,16 +23,38 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const cleanupWebCallbackUrl = () => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') {
+      return;
+    }
+
+    const isAuthCallbackPath = window.location.pathname === '/auth/callback';
+    const hasAuthHash =
+      window.location.hash.includes('access_token') ||
+      window.location.hash.includes('refresh_token') ||
+      window.location.hash.includes('error');
+
+    if (isAuthCallbackPath || hasAuthHash) {
+      window.history.replaceState({}, document.title, '/');
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session) {
+        cleanupWebCallbackUrl();
+      }
       setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session) {
+        cleanupWebCallbackUrl();
+      }
       setLoading(false);
     });
 

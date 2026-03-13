@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,14 @@ const CONVERSION_OPTIONS = [
   { id: 'image', icon: 'image', label: 'Görsel', color: '#8B5CF6' },
   { id: 'text', icon: 'document-outline', label: 'Metin', color: '#F59E0B' },
 ];
+
+const CONVERSION_COMPATIBILITY = {
+  excel: ['pdf', 'word', 'text', 'image'],
+  word: ['pdf', 'text', 'powerpoint'],
+  powerpoint: ['pdf', 'word', 'text', 'image'],
+  image: ['pdf', 'text'],
+  text: ['pdf', 'word', 'powerpoint'],
+};
 
 export default function AIFileScreen({ t, theme, onClose }) {
   const [selectedFileType, setSelectedFileType] = useState('excel');
@@ -115,7 +123,23 @@ export default function AIFileScreen({ t, theme, onClose }) {
   };
 
   const currentFileType = FILE_TYPES.find(f => f.id === selectedFileType);
-  const currentConversion = CONVERSION_OPTIONS.find(c => c.id === selectedConversion);
+  const availableConversions = CONVERSION_OPTIONS.filter((option) =>
+    CONVERSION_COMPATIBILITY[selectedFileType]?.includes(option.id)
+  );
+  const currentConversion =
+    availableConversions.find(c => c.id === selectedConversion) || availableConversions[0] || CONVERSION_OPTIONS[0];
+
+  const workflowHighlights = [
+    `${currentFileType.label} içeriği otomatik algılanır`,
+    `${currentConversion.label} çıktısı web üzerinden indirilir`,
+    'Dosya metni ve temel yapı korunmaya çalışılır',
+  ];
+
+  useEffect(() => {
+    if (currentConversion?.id && currentConversion.id !== selectedConversion && !isProcessing) {
+      setSelectedConversion(currentConversion.id);
+    }
+  }, [currentConversion?.id, isProcessing, selectedConversion]);
 
   // Default theme values
   const safeTheme = {
@@ -152,6 +176,18 @@ export default function AIFileScreen({ t, theme, onClose }) {
           <Text style={[styles.heroSubtitle, { color: safeTheme.sidebarMutedText }]}>
             Yapay zeka ile dosyalarınızı farklı formatlara dönüştürün
           </Text>
+          <View style={styles.heroBadges}>
+            <View style={[styles.heroBadge, { backgroundColor: currentFileType.color + '20' }]}>
+              <Text style={[styles.heroBadgeText, { color: currentFileType.color }]}>
+                Kaynak: {currentFileType.label}
+              </Text>
+            </View>
+            <View style={[styles.heroBadge, { backgroundColor: currentConversion.color + '20' }]}>
+              <Text style={[styles.heroBadgeText, { color: currentConversion.color }]}>
+                Çıktı: {currentConversion.label}
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* File Upload Section */}
@@ -201,6 +237,24 @@ export default function AIFileScreen({ t, theme, onClose }) {
           )}
         </View>
 
+        <View
+          style={[
+            styles.workflowCard,
+            { backgroundColor: safeTheme.headerBackground, borderColor: safeTheme.sidebarBorder },
+          ]}
+        >
+          <View style={styles.workflowHeader}>
+            <Ionicons name="sparkles" size={18} color={currentConversion.color} />
+            <Text style={[styles.workflowTitle, { color: safeTheme.sidebarText }]}>Akıllı Dönüşüm Özeti</Text>
+          </View>
+          {workflowHighlights.map((item) => (
+            <View key={item} style={styles.workflowItem}>
+              <Ionicons name="checkmark-circle" size={18} color="#10A37F" />
+              <Text style={[styles.workflowItemText, { color: safeTheme.sidebarMutedText }]}>{item}</Text>
+            </View>
+          ))}
+        </View>
+
         {/* File Type Selection */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: safeTheme.sidebarText }]}>
@@ -239,7 +293,7 @@ export default function AIFileScreen({ t, theme, onClose }) {
             Dönüştürülecek Format
           </Text>
           <View style={styles.conversionGrid}>
-            {CONVERSION_OPTIONS.map((option) => (
+            {availableConversions.map((option) => (
               <TouchableOpacity
                 key={option.id}
                 style={[
@@ -289,6 +343,19 @@ export default function AIFileScreen({ t, theme, onClose }) {
             </>
           )}
         </TouchableOpacity>
+
+        <View
+          style={[
+            styles.qualityCard,
+            { backgroundColor: safeTheme.headerBackground, borderColor: safeTheme.sidebarBorder },
+          ]}
+        >
+          <Text style={[styles.qualityTitle, { color: safeTheme.sidebarText }]}>Kalite ve Uyumluluk</Text>
+          <Text style={[styles.qualityText, { color: safeTheme.sidebarMutedText }]}>
+            En iyi sonuç için kaynak dosyanın gerçek uzantısını kullanın. Özellikle `.docx`, `.pptx` ve `.xlsx`
+            formatlarında yapı koruması daha güçlüdür. Mobilde bilgilendirme görünür, gerçek indirme akışı webde çalışır.
+          </Text>
+        </View>
 
         {/* Features */}
         <View style={styles.features}>
@@ -520,6 +587,64 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  heroBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
+  heroBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  heroBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  workflowCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  workflowHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  workflowTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  workflowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  workflowItemText: {
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 19,
+  },
+  qualityCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  qualityTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  qualityText: {
+    fontSize: 13,
+    lineHeight: 20,
   },
   features: {
     marginBottom: 40,

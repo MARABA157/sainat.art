@@ -12,50 +12,22 @@ import { Ionicons } from '@expo/vector-icons';
 // AI Provider'ların renkleri ve ikonları
 const AI_MODELS = [
   {
-    id: 'deepseek',
-    name: 'DeepSeek',
-    color: '#4D6BFA',
-    icon: '🔍',
-    models: {
-      text: [
-        { id: 'deepseek-v3', name: 'DeepSeek V3', description: 'Genel amaçlı' },
-        { id: 'deepseek-r1', name: 'DeepSeek R1', description: 'Akıl yürütme' },
-      ],
-      image: [
-        { id: 'deepseek-v3-vision', name: 'DeepSeek V3 Vision', description: 'Görsel analizi' },
-        { id: 'deepseek-r1-vision', name: 'DeepSeek R1 Vision', description: 'Görsel akıl yürütme' },
-      ],
-      video: [
-        { id: 'deepseek-video', name: 'DeepSeek Video', description: 'Video oluşturma' },
-        { id: 'deepseek-video-pro', name: 'DeepSeek Video Pro', description: 'Profesyonel video' },
-      ],
-      music: [
-        { id: 'deepseek-audio', name: 'DeepSeek Audio', description: 'Ses analizi' },
-        { id: 'deepseek-music', name: 'DeepSeek Music', description: 'Müzik oluşturma' },
-      ],
-    },
-  },
-  {
     id: 'gemini',
     name: 'Gemini',
     color: '#4285F4',
     icon: '✨',
     models: {
       text: [
-        { id: 'gemini-flash', name: '2.0 Flash', description: 'Hızlı yanıt' },
-        { id: 'gemini-pro', name: '1.5 Pro', description: 'Gelişmiş' },
+        { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', description: 'Son model' },
       ],
       image: [
-        { id: 'gemini-pro-vision', name: '1.5 Pro Vision', description: 'Görsel anlama' },
-        { id: 'gemini-flash-vision', name: '2.0 Flash Vision', description: 'Hızlı görsel' },
+        { id: 'gemini-2.0-flash-preview-image-generation', name: 'Gemini 2.0 Flash Preview Image Generation', description: 'Son model' },
       ],
       video: [
-        { id: 'gemini-video', name: 'Gemini Video', description: 'Video analizi' },
-        { id: 'gemini-video-pro', name: 'Gemini Video Pro', description: 'Gelişmiş video' },
+        { id: 'veo-2', name: 'Veo 2', description: 'Son model' },
       ],
       music: [
-        { id: 'gemini-audio', name: 'Gemini Audio', description: 'Ses tanıma' },
-        { id: 'gemini-music', name: 'Gemini Music', description: 'Müzik oluşturma' },
+        { id: 'lyria', name: 'Lyria', description: 'Son model' },
       ],
     },
   },
@@ -66,20 +38,16 @@ const AI_MODELS = [
     icon: '💬',
     models: {
       text: [
-        { id: 'gpt-4o', name: 'GPT-4o', description: 'En yetenekli' },
-        { id: 'o3-mini', name: 'o3-mini', description: 'Akıl yürütme' },
+        { id: 'gpt-4o', name: 'GPT-4o', description: 'Son model' },
       ],
       image: [
-        { id: 'gpt-4o-vision', name: 'GPT-4o Vision', description: 'Görsel anlama' },
-        { id: 'dall-e-3', name: 'DALL-E 3', description: 'Görsel oluşturma' },
+        { id: 'gpt-image-1', name: 'gpt-image-1', description: 'Son model' },
       ],
       video: [
-        { id: 'gpt-4o-video', name: 'GPT-4o Video', description: 'Video analizi' },
-        { id: 'sora', name: 'Sora', description: 'Video oluşturma' },
+        { id: 'sora', name: 'Sora', description: 'Son model' },
       ],
       music: [
-        { id: 'gpt-4o-audio', name: 'GPT-4o Audio', description: 'Ses analizi' },
-        { id: 'music-gen', name: 'MusicGen', description: 'Müzik oluşturma' },
+        { id: 'gpt-4o-audio', name: 'GPT-4o Audio', description: 'Son model' },
       ],
     },
   },

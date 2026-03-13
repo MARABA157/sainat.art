@@ -54,6 +54,7 @@ export default function Sidebar({
 
   return (
     <View pointerEvents="box-none" style={styles.drawerContainer}>
+      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
       <View style={[styles.sidebar, { backgroundColor: theme.sidebarBackground }]}>
         <View style={styles.header}>
           <TouchableOpacity style={[styles.newChatButton, { borderColor: theme.sidebarBorder }]} onPress={onNewChat}>
@@ -223,6 +224,10 @@ const styles = StyleSheet.create({
     zIndex: 20,
     elevation: 20,
     pointerEvents: 'box-none',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15, 23, 42, 0.42)',
   },
   sidebar: {
     position: 'absolute',
