@@ -71,7 +71,15 @@ export default function ModelMenu({ t, theme, selectedModel, onSelectModel, isVi
   }, [selectedModel]);
 
   const handleSelect = (providerId, modelId) => {
-    onSelectModel?.({ provider: providerId, model: modelId });
+    const selectedProviderItem = AI_MODELS.find((item) => item.id === providerId);
+
+    onSelectModel?.({
+      provider: providerId,
+      model: modelId,
+      providerName: selectedProviderItem?.name,
+      providerIcon: selectedProviderItem?.icon,
+      providerColor: selectedProviderItem?.color,
+    });
     setSelectedProvider(providerId);
     onClose?.();
   };

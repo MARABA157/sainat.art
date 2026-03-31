@@ -130,9 +130,18 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const isLocalTestSession = session?.user?.id === 'test-user-123' || user?.id === 'test-user-123';
+
+      if (!isLocalTestSession) {
+        await supabase.auth.signOut();
+      }
+
       setUser(null);
       setSession(null);
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.history.replaceState({}, document.title, '/');
+      }
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

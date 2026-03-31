@@ -7,11 +7,13 @@ import {
   Platform,
   SafeAreaView,
   ImageBackground,
-  Dimensions,
   Modal,
+  Alert,
 } from 'react-native';
 import { useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import Header from '../components/Header';
 import MessageBubble from '../components/MessageBubble';
 import ChatInput from '../components/ChatInput';
@@ -83,6 +85,14 @@ export default function ChatScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const sidebarWidth = Math.min(width * 0.75, 300);
+  const quickPrompts = [
+    'Bunu özetle',
+    'Bunu İngilizceye çevir',
+    'Bana 5 içerik fikri ver',
+    'Bunu profesyonel yaz',
+    'Adım adım anlat',
+  ];
+  const conversationFolders = ['Genel', 'İş', 'İçerik', 'Okul'];
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
@@ -92,7 +102,17 @@ export default function ChatScreen() {
     chatThemes.find((item) => item.id === 'chatgpt') || chatThemes[0]
   );
   const [showLogin, setShowLogin] = useState(false);
-  const { messages, isTyping, sendMessage, startNewChat } = useChat(t);
+  const [pendingAttachment, setPendingAttachment] = useState(null);
+  const [conversationMeta, setConversationMeta] = useState({});
+  const {
+    messages,
+    isTyping,
+    sendMessage,
+    startNewChat,
+    conversations,
+    currentConversationId,
+    selectConversation,
+  } = useChat(t);
   const flatListRef = useRef(null);
   const prevUserRef = useRef(null);
 
@@ -185,6 +205,136 @@ export default function ChatScreen() {
     setShowAIFile(true);
   };
 
+  const getActiveConversationId = () => currentConversationId || 'draft';
+
+  const updateConversationMeta = (conversationId, updater) => {
+    setConversationMeta((prev) => {
+      const base = prev[conversationId] || {
+        favorite: false,
+        folder: conversationFolders[0],
+      };
+
+      return {
+        ...prev,
+        [conversationId]: typeof updater === 'function' ? updater(base) : { ...base, ...updater },
+      };
+    });
+  };
+
+  const handleToggleFavorite = (conversationId) => {
+    updateConversationMeta(conversationId, (current) => ({
+      ...current,
+      favorite: !current.favorite,
+    }));
+  };
+
+  const handleCycleFolder = (conversationId) => {
+    updateConversationMeta(conversationId, (current) => {
+      const currentIndex = conversationFolders.indexOf(current.folder);
+      const nextFolder = conversationFolders[(currentIndex + 1) % conversationFolders.length];
+
+      return {
+        ...current,
+        folder: nextFolder,
+      };
+    });
+  };
+
+  const buildMessagePayload = (text) => {
+    const segments = [];
+
+    if (pendingAttachment) {
+      segments.push(`[Ek içerik: ${pendingAttachment.label}] ${pendingAttachment.prompt}`);
+    }
+
+    segments.push(text);
+
+    return segments.join('\n\n');
+  };
+
+  const handleSendMessage = async (text) => {
+    if (!text?.trim() && !pendingAttachment) {
+      return;
+    }
+
+    const finalText = buildMessagePayload(text?.trim() || 'Bu ekteki içerik için yardımcı ol.');
+    await sendMessage(finalText);
+    setPendingAttachment(null);
+  };
+
+  const handleQuickPrompt = (prompt) => {
+    handleSendMessage(prompt);
+  };
+
+  const handleVoiceAction = () => {
+    Alert.alert(
+      'Sesli Asistan',
+      'Sesli mod arayüzü eklendi. Gerçek konuşma tanıma için bir STT servisi veya ek Expo bağımlılığı bağlanabilir.'
+    );
+  };
+
+  const handlePickGalleryImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert('İzin Gerekli', 'Galeri erişimi için izin vermeniz gerekiyor.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.9,
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      setPendingAttachment({
+        type: 'image',
+        label: asset.fileName || 'Seçilen görsel',
+        prompt: `Kullanıcı bir görsel seçti: ${asset.fileName || 'Adsız görsel'}. Görseli açıklayan, analiz eden ve uygulanabilir öneriler sunan bir cevap ver.`,
+      });
+    }
+  };
+
+  const handlePickCameraImage = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert('İzin Gerekli', 'Kamera kullanımı için izin vermeniz gerekiyor.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.9,
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      const asset = result.assets[0];
+      setPendingAttachment({
+        type: 'camera',
+        label: asset.fileName || 'Kamera görseli',
+        prompt: `Kullanıcı kameradan yeni bir görsel çekti: ${asset.fileName || 'Kamera görseli'}. İçeriği analiz et ve pratik öneriler sun.`,
+      });
+    }
+  };
+
+  const handlePickDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: '*/*',
+      copyToCacheDirectory: true,
+    });
+
+    if (!result.canceled && result.assets?.length) {
+      const file = result.assets[0];
+      setPendingAttachment({
+        type: 'document',
+        label: file.name,
+        prompt: `Kullanıcı bir dosya yükledi: ${file.name}. Dosyayı görmüş gibi davranmadan, dosyanın olası içeriğini anlamaya yardımcı olacak sorular sor ve en iyi sonraki adımları öner.`,
+      });
+    }
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -212,6 +362,15 @@ export default function ChatScreen() {
         onSelectChatTheme={setSelectedChatTheme}
         selectedChatTheme={selectedChatTheme}
         chatThemes={chatThemes}
+        conversations={conversations}
+        currentConversationId={currentConversationId}
+        onSelectConversation={(conversationId) => {
+          selectConversation(conversationId);
+          setSidebarOpen(false);
+        }}
+        conversationMeta={conversationMeta}
+        onToggleFavorite={handleToggleFavorite}
+        onCycleFolder={handleCycleFolder}
         t={t}
         theme={theme}
       />
@@ -240,6 +399,7 @@ export default function ChatScreen() {
             <View style={styles.chatOverlay} />
             <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 20}
               style={styles.keyboardView}
             >
               <FlatList
@@ -251,7 +411,19 @@ export default function ChatScreen() {
                 showsVerticalScrollIndicator={false}
                 style={styles.messagesListView}
               />
-              <ChatInput onSend={sendMessage} isTyping={isTyping} t={t} theme={theme} />
+              <ChatInput
+                onSend={handleSendMessage}
+                isTyping={isTyping}
+                t={t}
+                theme={theme}
+                quickPrompts={quickPrompts}
+                onPickImage={handlePickGalleryImage}
+                onPickCamera={handlePickCameraImage}
+                onPickDocument={handlePickDocument}
+                onStartVoiceInput={handleVoiceAction}
+                pendingAttachment={pendingAttachment}
+                onClearAttachment={() => setPendingAttachment(null)}
+              />
             </KeyboardAvoidingView>
           </ImageBackground>
         ) : (
@@ -264,6 +436,7 @@ export default function ChatScreen() {
           >
             <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 20}
               style={styles.keyboardView}
             >
               <FlatList
@@ -275,7 +448,19 @@ export default function ChatScreen() {
                 showsVerticalScrollIndicator={false}
                 style={styles.messagesListView}
               />
-              <ChatInput onSend={sendMessage} isTyping={isTyping} t={t} theme={theme} />
+              <ChatInput
+                onSend={handleSendMessage}
+                isTyping={isTyping}
+                t={t}
+                theme={theme}
+                quickPrompts={quickPrompts}
+                onPickImage={handlePickGalleryImage}
+                onPickCamera={handlePickCameraImage}
+                onPickDocument={handlePickDocument}
+                onStartVoiceInput={handleVoiceAction}
+                pendingAttachment={pendingAttachment}
+                onClearAttachment={() => setPendingAttachment(null)}
+              />
             </KeyboardAvoidingView>
           </View>
         )}
@@ -365,17 +550,20 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     alignSelf: 'stretch',
+    overflow: 'hidden',
   },
   solidBackground: {
     overflow: 'hidden',
   },
   chatBackgroundImage: {
-    opacity: 0.92,
+    width: '100%',
+    height: '100%',
+    opacity: 0.98,
     resizeMode: 'cover',
   },
   chatOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.38)',
+    backgroundColor: 'rgba(15, 23, 42, 0.18)',
   },
   messagesListView: {
     backgroundColor: 'transparent',
@@ -386,6 +574,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 8,
+    paddingBottom: Platform.OS === 'android' ? 28 : 12,
   },
 });

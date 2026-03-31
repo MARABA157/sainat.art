@@ -7,6 +7,7 @@ import {
   Dimensions,
   FlatList,
   ImageBackground,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,6 +26,9 @@ export default function Sidebar({
   conversations,
   onSelectConversation,
   currentConversationId,
+  conversationMeta = {},
+  onToggleFavorite,
+  onCycleFolder,
   t,
   theme,
 }) {
@@ -64,6 +68,57 @@ export default function Sidebar({
         </View>
 
         <View style={[styles.divider, { backgroundColor: theme.sidebarBorder }]} />
+
+        <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.sidebarMutedText }]}>Sohbetler</Text>
+            {conversations?.length ? (
+              conversations.map((conversation) => {
+                const meta = conversationMeta[conversation.id] || { favorite: false, folder: 'Genel' };
+                const isActive = currentConversationId === conversation.id;
+
+                return (
+                  <View
+                    key={conversation.id}
+                    style={[
+                      styles.chatCard,
+                      {
+                        backgroundColor: isActive ? theme.sidebarPremiumBackground : 'transparent',
+                        borderColor: theme.sidebarBorder,
+                      },
+                    ]}
+                  >
+                    <TouchableOpacity style={styles.chatCardMain} onPress={() => onSelectConversation?.(conversation.id)}>
+                      <View style={styles.chatCardHeader}>
+                        <Text style={[styles.chatCardTitle, { color: theme.sidebarText }]} numberOfLines={1}>
+                          {conversation.title || 'Yeni sohbet'}
+                        </Text>
+                        {meta.favorite && <Ionicons name="star" size={14} color="#FBBF24" />}
+                      </View>
+                      <Text style={[styles.chatCardMeta, { color: theme.sidebarMutedText }]} numberOfLines={1}>
+                        Klasör: {meta.folder}
+                      </Text>
+                    </TouchableOpacity>
+                    <View style={styles.chatCardActions}>
+                      <TouchableOpacity style={styles.chatAction} onPress={() => onToggleFavorite?.(conversation.id)}>
+                        <Ionicons
+                          name={meta.favorite ? 'star' : 'star-outline'}
+                          size={18}
+                          color={meta.favorite ? '#FBBF24' : theme.sidebarMutedText}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.chatAction} onPress={() => onCycleFolder?.(conversation.id)}>
+                        <Ionicons name="folder-open-outline" size={18} color={theme.sidebarMutedText} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={[styles.emptyStateText, { color: theme.sidebarMutedText }]}>Henüz sohbet yok.</Text>
+            )}
+          </View>
+        </ScrollView>
 
         <View style={[styles.footer, { borderTopColor: theme.sidebarBorder }]}>
           <TouchableOpacity style={[styles.premiumButton, { backgroundColor: theme.sidebarPremiumBackground }]} onPress={onPremium}>
@@ -262,11 +317,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 12,
   },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 140,
+  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '500',
     marginBottom: 8,
     paddingHorizontal: 12,
+  },
+  chatCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+  },
+  chatCardMain: {
+    marginBottom: 8,
+  },
+  chatCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  chatCardTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  chatCardMeta: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  chatCardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  chatAction: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   chatItem: {
     flexDirection: 'row',

@@ -24,6 +24,7 @@ export default function ProfileScreen({
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeSheet, setActiveSheet] = useState(null);
+  const [activePage, setActivePage] = useState(null);
   const [profileDraft, setProfileDraft] = useState({
     fullName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || '',
     role: user?.user_metadata?.role || 'Yapay zeka meraklısı',
@@ -151,6 +152,11 @@ export default function ProfileScreen({
   };
 
   const openSupportSheet = (sheetKey) => {
+    if (sheetKey === 'privacy') {
+      setActivePage(sheetKey);
+      return;
+    }
+
     setActiveSheet(sheetKey);
   };
 
@@ -270,8 +276,12 @@ export default function ProfileScreen({
                             setActiveSheet('theme');
                             return;
                           }
-                          if (item.id === 'help' || item.id === 'feedback' || item.id === 'privacy' || item.id === 'terms') {
+                          if (item.id === 'help' || item.id === 'feedback' || item.id === 'terms') {
                             openSupportSheet(item.id);
+                            return;
+                          }
+                          if (item.id === 'privacy') {
+                            setActivePage('privacy');
                             return;
                           }
                           Alert.alert('Yakında', `${item.label} için gelişmiş ayar ekranı bir sonraki aşamada eklenecek.`);
@@ -341,6 +351,53 @@ export default function ProfileScreen({
           {t.profile.version} 1.0.0
         </Text>
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={Boolean(activePage && supportContent[activePage])}
+        onRequestClose={() => setActivePage(null)}
+      >
+        {activePage && supportContent[activePage] ? (
+          <View style={[styles.pageContainer, { backgroundColor: theme.sidebarBackground }]}>
+            <View style={[styles.header, { borderBottomColor: theme.sidebarBorder }]}>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setActivePage(null)}>
+                <Ionicons name="arrow-back" size={24} color={theme.sidebarText} />
+              </TouchableOpacity>
+              <Text style={[styles.headerTitle, { color: theme.sidebarText }]}>
+                {supportContent[activePage].title}
+              </Text>
+              <View style={styles.closeButton} />
+            </View>
+
+            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+              <View style={[styles.pageHero, { backgroundColor: theme.headerBackground, borderColor: theme.sidebarBorder }]}>
+                <View style={[styles.pageHeroIcon, { backgroundColor: theme.paletteAccent || '#10A37F' }]}>
+                  <Ionicons name={supportContent[activePage].icon} size={26} color="#FFFFFF" />
+                </View>
+                <Text style={[styles.pageTitle, { color: theme.headerText }]}>{supportContent[activePage].title}</Text>
+                <Text style={[styles.pageSubtitle, { color: theme.sidebarTextSecondary }]}>
+                  Kullanıcı verileri, oturum akışları ve temel güvenlik ilkeleri için güncel özet bilgileri burada bulabilirsiniz.
+                </Text>
+              </View>
+
+              {supportContent[activePage].sections.map((section) => (
+                <View
+                  key={section.heading}
+                  style={[
+                    styles.supportCard,
+                    styles.pageCard,
+                    { backgroundColor: theme.headerBackground, borderColor: theme.sidebarBorder },
+                  ]}
+                >
+                  <Text style={[styles.supportHeading, { color: theme.sidebarText }]}>{section.heading}</Text>
+                  <Text style={[styles.supportBody, { color: theme.sidebarTextSecondary }]}>{section.body}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+      </Modal>
 
       <Modal
         animationType="slide"
@@ -514,6 +571,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  pageContainer: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -668,6 +728,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 32,
   },
+  pageHero: {
+    margin: 16,
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+  },
+  pageHeroIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
   sheetBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.45)',
@@ -763,6 +846,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+  },
+  pageCard: {
+    marginHorizontal: 16,
   },
   supportHeading: {
     fontSize: 15,

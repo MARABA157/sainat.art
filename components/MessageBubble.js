@@ -1,15 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet } from 'react-native';
 
 export default function MessageBubble({ message, isUser, theme }) {
   return (
     <View style={[styles.container, isUser ? styles.userContainer : styles.aiContainer]}>
-      {!isUser && (
-        <TouchableOpacity style={[styles.plusButton, { backgroundColor: theme.messageActionBackground }]}>
-          <Ionicons name="add" size={16} color={theme.messageActionIcon} />
-        </TouchableOpacity>
-      )}
       <View
         style={[
           styles.bubble,
@@ -45,14 +39,6 @@ const styles = StyleSheet.create({
   },
   aiContainer: {
     alignSelf: 'flex-start',
-  },
-  plusButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
   },
   bubble: {
     paddingHorizontal: 16,
