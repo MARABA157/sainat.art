@@ -16,7 +16,6 @@ export default function ChatInput({
   isTyping,
   t,
   theme,
-  quickPrompts = [],
   onPickImage,
   onPickCamera,
   onPickDocument,
@@ -27,11 +26,11 @@ export default function ChatInput({
   const [message, setMessage] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
   const [selectedModel, setSelectedModel] = useState({
-    provider: 'chatgpt',
-    model: 'gpt-4o',
-    providerName: 'ChatGPT',
-    providerIcon: '💬',
-    providerColor: '#10A37F',
+    provider: 'gemini',
+    model: 'gemini-2.0-flash',
+    providerName: 'Gemini',
+    providerIcon: '✨',
+    providerColor: '#4285F4',
   });
 
   const handleSend = () => {
@@ -55,23 +54,6 @@ export default function ChatInput({
         isVisible={menuVisible}
         onClose={() => setMenuVisible(false)}
       />
-      {quickPrompts.length > 0 && (
-        <View style={styles.quickPromptScroll}>
-          {quickPrompts.map((prompt) => (
-            <TouchableOpacity
-              key={prompt}
-              style={[styles.quickPromptChip, { backgroundColor: theme.inputWrapperBackground, borderColor: theme.inputBarBorder }]}
-              onPress={() => {
-                if (!isTyping) {
-                  onSend(prompt);
-                }
-              }}
-            >
-              <Text style={[styles.quickPromptText, { color: theme.inputText }]}>{prompt}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
       {pendingAttachment && (
         <View style={[styles.attachmentCard, { backgroundColor: theme.inputWrapperBackground, borderColor: theme.inputBarBorder }]}> 
           <View style={styles.attachmentInfo}>
@@ -148,22 +130,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     paddingBottom: Platform.OS === 'android' ? 24 : 12,
-  },
-  quickPromptScroll: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
-  },
-  quickPromptChip: {
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  quickPromptText: {
-    fontSize: 13,
   },
   attachmentCard: {
     flexDirection: 'row',

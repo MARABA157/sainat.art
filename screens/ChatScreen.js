@@ -85,13 +85,6 @@ export default function ChatScreen() {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const sidebarWidth = Math.min(width * 0.75, 300);
-  const quickPrompts = [
-    'Bunu özetle',
-    'Bunu İngilizceye çevir',
-    'Bana 5 içerik fikri ver',
-    'Bunu profesyonel yaz',
-    'Adım adım anlat',
-  ];
   const conversationFolders = ['Genel', 'İş', 'İçerik', 'Okul'];
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -262,10 +255,6 @@ export default function ChatScreen() {
     setPendingAttachment(null);
   };
 
-  const handleQuickPrompt = (prompt) => {
-    handleSendMessage(prompt);
-  };
-
   const handleVoiceAction = () => {
     Alert.alert(
       'Sesli Asistan',
@@ -416,7 +405,6 @@ export default function ChatScreen() {
                 isTyping={isTyping}
                 t={t}
                 theme={theme}
-                quickPrompts={quickPrompts}
                 onPickImage={handlePickGalleryImage}
                 onPickCamera={handlePickCameraImage}
                 onPickDocument={handlePickDocument}
@@ -453,7 +441,6 @@ export default function ChatScreen() {
                 isTyping={isTyping}
                 t={t}
                 theme={theme}
-                quickPrompts={quickPrompts}
                 onPickImage={handlePickGalleryImage}
                 onPickCamera={handlePickCameraImage}
                 onPickDocument={handlePickDocument}

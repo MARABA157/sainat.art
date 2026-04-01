@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 
 const SOURCE_LABELS = {
+  pdf: 'PDF',
   excel: 'Excel',
   word: 'Word',
   powerpoint: 'PowerPoint',
@@ -217,6 +218,40 @@ const parseExcel = async (asset) => {
   };
 };
 
+const parsePdf = async (asset) => {
+  const arrayBuffer = await readAssetAsArrayBuffer(asset);
+  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(arrayBuffer),
+    disableWorker: true,
+    useSystemFonts: true,
+  });
+  const document = await loadingTask.promise;
+  const pageTexts = [];
+
+  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    const page = await document.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item) => ('str' in item ? item.str : ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (pageText) {
+      pageTexts.push(pageText);
+    }
+  }
+
+  return {
+    sourceType: 'pdf',
+    fileName: asset.name,
+    textContent: pageTexts.join('\n\n').trim(),
+    rows: [],
+    metadata: { pageCount: document.numPages },
+  };
+};
+
 const parseWord = async (asset) => {
   const extension = getExtension(asset.name);
 
@@ -289,6 +324,8 @@ const parseImageFile = async (asset) => {
 
 export const parseUploadedFile = async (asset, fileType) => {
   switch (fileType) {
+    case 'pdf':
+      return parsePdf(asset);
     case 'excel':
       return parseExcel(asset);
     case 'word':

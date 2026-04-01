@@ -13,11 +13,23 @@ import * as DocumentPicker from 'expo-document-picker';
 import { convertFile, downloadConvertedFile } from '../utils/fileConverter';
 
 const FILE_TYPES = [
+  { id: 'pdf', icon: 'document', label: 'PDF', color: '#DC2626', extensions: ['.pdf'] },
   { id: 'excel', icon: 'grid', label: 'Excel', color: '#10A37F', extensions: ['.xlsx', '.xls'] },
-  { id: 'word', icon: 'document-text', label: 'Word', color: '#4285F4', extensions: ['.docx', '.doc'] },
-  { id: 'powerpoint', icon: 'easel', label: 'PowerPoint', color: '#EA4335', extensions: ['.pptx', '.ppt'] },
-  { id: 'image', icon: 'image', label: 'Görsel', color: '#8B5CF6', extensions: ['.jpg', '.png', '.gif'] },
+  { id: 'word', icon: 'document-text', label: 'Word', color: '#4285F4', extensions: ['.docx'] },
+  { id: 'powerpoint', icon: 'easel', label: 'PowerPoint', color: '#EA4335', extensions: ['.pptx'] },
+  { id: 'image', icon: 'image', label: 'Görsel', color: '#8B5CF6', extensions: ['.jpg', '.jpeg', '.png', '.gif'] },
   { id: 'text', icon: 'document', label: 'Metin', color: '#F59E0B', extensions: ['.txt', '.rtf'] },
+];
+
+const SUPPORTED_PICKER_TYPES = [
+  'application/pdf',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain',
+  'application/rtf',
+  'image/*',
 ];
 
 const CONVERSION_OPTIONS = [
@@ -30,11 +42,53 @@ const CONVERSION_OPTIONS = [
 ];
 
 const CONVERSION_COMPATIBILITY = {
-  excel: ['pdf', 'word', 'text', 'image'],
-  word: ['pdf', 'text', 'powerpoint'],
-  powerpoint: ['pdf', 'word', 'text', 'image'],
-  image: ['pdf', 'text'],
-  text: ['pdf', 'word', 'powerpoint'],
+  pdf: ['excel', 'word', 'text', 'image'],
+  excel: ['pdf', 'excel', 'word', 'text', 'image'],
+  word: ['pdf', 'excel', 'text', 'powerpoint'],
+  powerpoint: ['pdf', 'excel', 'word', 'text', 'image'],
+  image: ['pdf', 'excel', 'text'],
+  text: ['pdf', 'excel', 'word', 'powerpoint'],
+};
+
+const SUPPORTED_EXTENSIONS = FILE_TYPES.flatMap((type) => type.extensions);
+
+const detectFileTypeFromAsset = (asset) => {
+  const extension = asset.name?.split('.').pop()?.toLowerCase();
+  const mimeType = asset.mimeType?.toLowerCase() || asset.file?.type?.toLowerCase() || '';
+
+  const byExtension = FILE_TYPES.find((type) =>
+    type.extensions.some((ext) => ext.slice(1).toLowerCase() === extension)
+  );
+
+  if (byExtension) {
+    return byExtension;
+  }
+
+  if (mimeType.includes('pdf')) {
+    return FILE_TYPES.find((type) => type.id === 'pdf');
+  }
+
+  if (mimeType.includes('sheet') || mimeType.includes('excel')) {
+    return FILE_TYPES.find((type) => type.id === 'excel');
+  }
+
+  if (mimeType.includes('wordprocessingml')) {
+    return FILE_TYPES.find((type) => type.id === 'word');
+  }
+
+  if (mimeType.includes('presentationml') || mimeType.includes('powerpoint')) {
+    return FILE_TYPES.find((type) => type.id === 'powerpoint');
+  }
+
+  if (mimeType.startsWith('image/')) {
+    return FILE_TYPES.find((type) => type.id === 'image');
+  }
+
+  if (mimeType.startsWith('text/') || mimeType.includes('rtf')) {
+    return FILE_TYPES.find((type) => type.id === 'text');
+  }
+
+  return null;
 };
 
 export default function AIFileScreen({ t, theme, onClose }) {
@@ -46,25 +100,27 @@ export default function AIFileScreen({ t, theme, onClose }) {
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*',
+        type: SUPPORTED_PICKER_TYPES,
         copyToCacheDirectory: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
+        const detectedType = detectFileTypeFromAsset(file);
+
+        if (!detectedType) {
+          Alert.alert(
+            'Desteklenmeyen Dosya',
+            `Bu sürümde şu uzantılar destekleniyor: ${SUPPORTED_EXTENSIONS.join(', ')}`
+          );
+          return;
+        }
+
         setUploadedFile(file);
-        
-        // Otomatik dosya türü algılama
-        const fileExtension = file.name.split('.').pop().toLowerCase();
-        const detectedType = FILE_TYPES.find(type => 
-          type.extensions.some(ext => ext.slice(1) === fileExtension)
-        );
         
         if (detectedType) {
           setSelectedFileType(detectedType.id);
           Alert.alert('Dosya Yüklendi', `${file.name} başarıyla yüklendi. Otomatik olarak ${detectedType.label} olarak algılandı.`);
-        } else {
-          Alert.alert('Dosya Yüklendi', `${file.name} başarıyla yüklendi.`);
         }
       }
     } catch (error) {
@@ -85,8 +141,8 @@ export default function AIFileScreen({ t, theme, onClose }) {
 
     if (Platform.OS !== 'web') {
       Alert.alert(
-        'Web Gerekli',
-        'Bu sürümde gerçek dosya dönüştürme işlemi web üzerinde indirme olarak çalışır. Lütfen web sürümünden deneyin.'
+        'Web Sürümünde Dönüştür',
+        'Gerçek dosya dönüşümü ve indirme akışı şu an web sürümünde çalışıyor. Aynı dosyayı web üzerinden yükleyip indirebilirsiniz.'
       );
       return;
     }
@@ -132,7 +188,7 @@ export default function AIFileScreen({ t, theme, onClose }) {
   const workflowHighlights = [
     `${currentFileType.label} içeriği otomatik algılanır`,
     `${currentConversion.label} çıktısı web üzerinden indirilir`,
-    'Dosya metni ve temel yapı korunmaya çalışılır',
+    'İçerik dönüştürülür; birebir orijinal düzen her formatta korunmayabilir',
   ];
 
   useEffect(() => {
@@ -226,8 +282,8 @@ export default function AIFileScreen({ t, theme, onClose }) {
               <Text style={[styles.uploadTitle, { color: safeTheme.sidebarText }]}>
                 Dosya Seç
               </Text>
-              <Text style={[styles.uploadSubtitle, { color: safeTheme.sidebarMutedText }]}>
-                Herhangi bir dosya türü yükleyin, otomatik algılanacaktır
+              <Text style={[styles.uploadSubtitle, { color: safeTheme.sidebarMutedText }]}> 
+                Desteklenen dosyaları yükleyin, tür otomatik algılanacaktır
               </Text>
               <View style={[styles.uploadButtonInner, { backgroundColor: currentConversion.color }]}>
                 <Ionicons name="folder-open" size={16} color="#FFFFFF" />
@@ -351,9 +407,9 @@ export default function AIFileScreen({ t, theme, onClose }) {
           ]}
         >
           <Text style={[styles.qualityTitle, { color: safeTheme.sidebarText }]}>Kalite ve Uyumluluk</Text>
-          <Text style={[styles.qualityText, { color: safeTheme.sidebarMutedText }]}>
-            En iyi sonuç için kaynak dosyanın gerçek uzantısını kullanın. Özellikle `.docx`, `.pptx` ve `.xlsx`
-            formatlarında yapı koruması daha güçlüdür. Mobilde bilgilendirme görünür, gerçek indirme akışı webde çalışır.
+          <Text style={[styles.qualityText, { color: safeTheme.sidebarMutedText }]}> 
+            En iyi sonuç için kaynak dosyanın gerçek uzantısını kullanın. Bu sürümde `.pdf`, `.xlsx`, `.xls`, `.docx`, `.pptx`,
+            `.txt`, `.rtf`, `.jpg`, `.jpeg`, `.png` ve `.gif` desteklenir. Özellikle `.docx`, `.pptx` ve `.xlsx` formatlarında yapı koruması daha güçlüdür.
           </Text>
         </View>
 

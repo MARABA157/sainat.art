@@ -3,6 +3,9 @@ import { supabase } from '../config/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.EXPO_PUBLIC_GEMINI_MODEL || 'gemini-2.0-flash';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 const getRandomResponse = (translations) => {
   const responses = translations?.chat?.mockResponses || [
@@ -11,6 +14,66 @@ const getRandomResponse = (translations) => {
     'Size yardımcı olmaktan mutluluk duyarım!',
   ];
   return responses[Math.floor(Math.random() * responses.length)];
+};
+
+const buildConversationPrompt = (messages, nextUserText) => {
+  const history = messages
+    .slice(-12)
+    .map((message) => `${message.isUser ? 'Kullanıcı' : 'Asistan'}: ${message.text}`)
+    .join('\n');
+
+  return [
+    'Sen Sainat uygulamasındaki yardımcı bir AI asistansın.',
+    'Kısa, net ve yardımcı cevaplar ver.',
+    history,
+    `Kullanıcı: ${nextUserText}`,
+    'Asistan:',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+};
+
+const requestGeminiResponse = async ({ prompt }) => {
+  if (!GEMINI_API_KEY) {
+    throw new Error('Gemini API anahtarı eksik. `.env` dosyasına `EXPO_PUBLIC_GEMINI_API_KEY` ekleyin.');
+  }
+
+  const response = await fetch(GEMINI_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      },
+    }),
+  });
+
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || 'Gemini isteği başarısız oldu.');
+  }
+
+  const text = payload?.candidates?.[0]?.content?.parts
+    ?.map((part) => part.text || '')
+    .join('')
+    .trim();
+
+  if (!text) {
+    throw new Error('Gemini boş yanıt döndürdü.');
+  }
+
+  return text;
 };
 
 export default function useChat(t) {
@@ -111,26 +174,40 @@ export default function useChat(t) {
   };
 
   const sendMessage = useCallback(async (text) => {
+    const userMessage = {
+      id: generateId(),
+      text,
+      isUser: true,
+      timestamp: new Date().toISOString(),
+    };
+
     if (!hasSupabaseSession) {
-      const userMessage = {
-        id: generateId(),
-        text,
-        isUser: true,
-        timestamp: new Date().toISOString(),
-      };
       setMessages((prev) => [...prev, userMessage]);
       setIsTyping(true);
 
-      setTimeout(() => {
+      try {
+        const aiResponseText = await requestGeminiResponse({
+          prompt: buildConversationPrompt(messages, text),
+        });
         const aiMessage = {
           id: generateId(),
-          text: getRandomResponse(t),
+          text: aiResponseText,
           isUser: false,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, aiMessage]);
+      } catch (error) {
+        console.error('Gemini yanıtı alınırken hata:', error);
+        const fallbackMessage = {
+          id: generateId(),
+          text: error?.message || getRandomResponse(t),
+          isUser: false,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, fallbackMessage]);
+      } finally {
         setIsTyping(false);
-      }, 2000 + Math.random() * 1000);
+      }
       return;
     }
 
@@ -152,19 +229,14 @@ export default function useChat(t) {
 
       if (msgError) throw msgError;
 
-      const userMessage = {
-        id: generateId(),
-        text,
-        isUser: true,
-        timestamp: new Date().toISOString(),
-      };
       setMessages((prev) => [...prev, userMessage]);
       setIsTyping(true);
 
-      setTimeout(async () => {
-        const aiResponseText = getRandomResponse(t);
-        
-        await supabase
+      const aiResponseText = await requestGeminiResponse({
+        prompt: buildConversationPrompt(messages, text),
+      });
+
+      const { error: aiInsertError } = await supabase
           .from('messages')
           .insert([{
             conversation_id: conversationId,
@@ -173,20 +245,29 @@ export default function useChat(t) {
             is_user: false,
           }]);
 
-        const aiMessage = {
-          id: generateId(),
-          text: aiResponseText,
-          isUser: false,
-          timestamp: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, aiMessage]);
-        setIsTyping(false);
-      }, 2000 + Math.random() * 1000);
+      if (aiInsertError) throw aiInsertError;
+
+      const aiMessage = {
+        id: generateId(),
+        text: aiResponseText,
+        isUser: false,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
 
     } catch (error) {
       console.error('Mesaj gönderilirken hata:', error);
+      const errorMessage = {
+        id: generateId(),
+        text: error?.message || 'Mesaj gönderilirken bir hata oluştu.',
+        isUser: false,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
     }
-  }, [hasSupabaseSession, user, currentConversationId, t]);
+  }, [hasSupabaseSession, user, currentConversationId, messages, t]);
 
   const startNewChat = useCallback(async () => {
     if (hasSupabaseSession) {

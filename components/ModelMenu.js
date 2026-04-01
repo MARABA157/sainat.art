@@ -61,7 +61,7 @@ const MEDIA_TYPES = [
 ];
 
 export default function ModelMenu({ t, theme, selectedModel, onSelectModel, isVisible, onClose }) {
-  const [selectedProvider, setSelectedProvider] = useState(selectedModel?.provider || 'chatgpt');
+  const [selectedProvider, setSelectedProvider] = useState(selectedModel?.provider || 'gemini');
   const [mediaType, setMediaType] = useState('text');
 
   useEffect(() => {

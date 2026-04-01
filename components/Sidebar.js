@@ -120,7 +120,7 @@ export default function Sidebar({
           </View>
         </ScrollView>
 
-        <View style={[styles.footer, { borderTopColor: theme.sidebarBorder }]}>
+        <View style={[styles.footer, { borderTopColor: theme.sidebarBorder }]}> 
           <TouchableOpacity style={[styles.premiumButton, { backgroundColor: theme.sidebarPremiumBackground }]} onPress={onPremium}>
             <Ionicons name="star" size={20} color="#FFD700" />
             <Text style={styles.premiumText}>{t.sidebar.upgrade}</Text>
@@ -313,15 +313,15 @@ const styles = StyleSheet.create({
     height: 1,
     marginHorizontal: 12,
   },
-  section: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-  },
   content: {
     flex: 1,
   },
   contentContainer: {
     paddingBottom: 140,
+  },
+  section: {
+    paddingHorizontal: 12,
+    paddingTop: 12,
   },
   sectionTitle: {
     fontSize: 12,
@@ -369,18 +369,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     paddingHorizontal: 12,
     paddingVertical: 8,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  chatText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginLeft: 12,
   },
   footer: {
     position: 'absolute',
@@ -488,10 +476,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#FFFFFF',
     borderRadius: 14,
-  },
-  chatItemActive: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
   },
   themeCardTitle: {
     fontSize: 12,
