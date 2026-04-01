@@ -68,6 +68,9 @@ export default function ModelMenu({ t, theme, selectedModel, onSelectModel, isVi
     if (selectedModel?.provider) {
       setSelectedProvider(selectedModel.provider);
     }
+    if (selectedModel?.mediaType) {
+      setMediaType(selectedModel.mediaType);
+    }
   }, [selectedModel]);
 
   const handleSelect = (providerId, modelId) => {
@@ -76,6 +79,7 @@ export default function ModelMenu({ t, theme, selectedModel, onSelectModel, isVi
     onSelectModel?.({
       provider: providerId,
       model: modelId,
+      mediaType,
       providerName: selectedProviderItem?.name,
       providerIcon: selectedProviderItem?.icon,
       providerColor: selectedProviderItem?.color,

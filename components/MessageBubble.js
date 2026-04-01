@@ -1,7 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
 
 export default function MessageBubble({ message, isUser, theme }) {
+  const handleOpenMedia = async () => {
+    if (!message?.media?.uri) {
+      return;
+    }
+
+    await Linking.openURL(message.media.uri);
+  };
+
   return (
     <View style={[styles.container, isUser ? styles.userContainer : styles.aiContainer]}>
       <View
@@ -12,16 +20,28 @@ export default function MessageBubble({ message, isUser, theme }) {
             : [styles.aiBubble, { backgroundColor: theme.aiBubbleBackground }],
         ]}
       >
-        <Text
-          style={[
-            styles.text,
-            isUser
-              ? [styles.userText, { color: theme.userBubbleText }]
-              : [styles.aiText, { color: theme.aiBubbleText }],
-          ]}
-        >
-          {message}
-        </Text>
+        {!!message?.text && (
+          <Text
+            style={[
+              styles.text,
+              isUser
+                ? [styles.userText, { color: theme.userBubbleText }]
+                : [styles.aiText, { color: theme.aiBubbleText }],
+            ]}
+          >
+            {message.text}
+          </Text>
+        )}
+        {message?.media?.type === 'image' && !!message?.media?.uri && (
+          <Image source={{ uri: message.media.uri }} style={styles.mediaImage} resizeMode="cover" />
+        )}
+        {(message?.media?.type === 'video' || message?.media?.type === 'audio') && !!message?.media?.uri && (
+          <TouchableOpacity style={styles.mediaButton} onPress={handleOpenMedia}>
+            <Text style={styles.mediaButtonText}>
+              {message.media.type === 'video' ? 'Videoyu Aç' : 'Sesi Aç'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -44,6 +64,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 18,
+    maxWidth: 320,
   },
   userBubble: {
     borderBottomRightRadius: 4,
@@ -54,6 +75,24 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     lineHeight: 22,
+  },
+  mediaImage: {
+    width: 260,
+    height: 260,
+    borderRadius: 14,
+    marginTop: 10,
+  },
+  mediaButton: {
+    marginTop: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#10A37F',
+    alignSelf: 'flex-start',
+  },
+  mediaButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   userText: {},
   aiText: {},

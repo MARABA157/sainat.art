@@ -28,6 +28,7 @@ export default function ChatInput({
   const [selectedModel, setSelectedModel] = useState({
     provider: 'gemini',
     model: 'gemini-2.0-flash',
+    mediaType: 'text',
     providerName: 'Gemini',
     providerIcon: '✨',
     providerColor: '#4285F4',
@@ -35,7 +36,7 @@ export default function ChatInput({
 
   const handleSend = () => {
     if ((message.trim() || pendingAttachment) && !isTyping) {
-      onSend(message.trim());
+      onSend({ text: message.trim(), selectedModel });
       setMessage('');
     }
   };
@@ -100,9 +101,11 @@ export default function ChatInput({
           selectionColor="#10A37F"
           value={message}
           onChangeText={setMessage}
-          multiline
-          maxHeight={120}
+          multiline={false}
           editable={!isTyping}
+          returnKeyType="send"
+          blurOnSubmit={false}
+          onSubmitEditing={handleSend}
         />
         <TouchableOpacity
           style={[
@@ -175,7 +178,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    maxHeight: 120,
     paddingTop: 8,
     paddingBottom: 8,
     paddingLeft: 12,

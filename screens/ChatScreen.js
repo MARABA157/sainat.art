@@ -187,7 +187,7 @@ export default function ChatScreen() {
 
   const renderMessage = ({ item }) => (
     <MessageBubble
-      message={item.text}
+      message={item}
       isUser={item.isUser}
       timestamp={item.timestamp}
       theme={theme}
@@ -245,13 +245,13 @@ export default function ChatScreen() {
     return segments.join('\n\n');
   };
 
-  const handleSendMessage = async (text) => {
+  const handleSendMessage = async ({ text, selectedModel }) => {
     if (!text?.trim() && !pendingAttachment) {
       return;
     }
 
     const finalText = buildMessagePayload(text?.trim() || 'Bu ekteki içerik için yardımcı ol.');
-    await sendMessage(finalText);
+    await sendMessage({ text: finalText, selectedModel });
     setPendingAttachment(null);
   };
 
