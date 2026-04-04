@@ -13,16 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginScreen({ onClose }) {
-  const { signInWithGoogle, signInTestUser, loading } = useAuth();
-
-  const handleTestSignIn = async () => {
-    try {
-      await signInTestUser();
-      onClose?.();
-    } catch (error) {
-      Alert.alert('Hata', 'Test girişi yapılırken bir sorun oluştu.');
-    }
-  };
+  const { signInWithGoogle, loading } = useAuth();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -91,17 +82,6 @@ export default function LoginScreen({ onClose }) {
                 </Text>
               </>
             )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.testButton}
-            onPress={handleTestSignIn}
-            disabled={loading}
-          >
-            <Ionicons name="flask-outline" size={24} color="#666" />
-            <Text style={styles.testButtonText}>
-              Test Kullanıcısı ile Giriş (Dev)
-            </Text>
           </TouchableOpacity>
         </View>
 
@@ -191,23 +171,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-  },
-  testButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 12,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  testButtonText: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
   },
   termsText: {
     fontSize: 12,

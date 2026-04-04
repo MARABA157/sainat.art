@@ -12,6 +12,19 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+const isSafeCheckoutUrl = (value) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(value);
+    return parsedUrl.protocol === 'https:';
+  } catch (error) {
+    return false;
+  }
+};
+
 export default function PremiumScreen({ onClose, t }) {
   const LEMONSQUEEZY_CHECKOUT_URLS = {
     plus: process.env.EXPO_PUBLIC_LEMONSQUEEZY_PLUS_URL || '',
@@ -31,7 +44,7 @@ export default function PremiumScreen({ onClose, t }) {
     }
 
     const checkoutUrl = LEMONSQUEEZY_CHECKOUT_URLS[planId];
-    if (!checkoutUrl) {
+    if (!checkoutUrl || !isSafeCheckoutUrl(checkoutUrl)) {
       Alert.alert(
         t.premium.alerts.errorTitle,
         'Lemon Squeezy ödeme bağlantısı henüz yapılandırılmadı.'
@@ -46,7 +59,7 @@ export default function PremiumScreen({ onClose, t }) {
       }
 
       const supported = await Linking.canOpenURL(checkoutUrl);
-      if (supported || checkoutUrl.startsWith('https://')) {
+      if (supported) {
         await Linking.openURL(checkoutUrl);
       } else {
         Alert.alert(t.premium.alerts.errorTitle, t.premium.alerts.checkoutFailed);

@@ -31,7 +31,7 @@ class ErrorBoundary extends React.Component {
 }
 
 function AppContent() {
-  const { loading, user, signInWithGoogle, signInTestUser, signOut } = useAuth();
+  const { loading, user, signInWithGoogle, signOut } = useAuth();
   const [draft, setDraft] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -122,14 +122,9 @@ function AppContent() {
           </div>
           <div className="auth-actions">
             {!user ? (
-              <>
-                <button className="primary-button" onClick={signInWithGoogle}>
-                  Google ile giriş
-                </button>
-                <button className="secondary-button" onClick={signInTestUser}>
-                  Test kullanıcı
-                </button>
-              </>
+              <button className="primary-button" onClick={signInWithGoogle}>
+                Google ile giriş
+              </button>
             ) : (
               <button className="secondary-button" onClick={signOut}>
                 Çıkış yap

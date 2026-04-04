@@ -12,9 +12,23 @@ if (Platform.OS !== 'web') {
     Linking = require('expo-linking');
     WebBrowser.maybeCompleteAuthSession();
   } catch (e) {
-    console.warn('Expo packages not available:', e);
+    console.warn('Expo auth packages not available.');
   }
 }
+
+const extractTokensFromCallbackUrl = (callbackUrl) => {
+  if (typeof callbackUrl !== 'string' || !callbackUrl.includes('#')) {
+    return { accessToken: null, refreshToken: null };
+  }
+
+  const hash = callbackUrl.split('#')[1] || '';
+  const params = new URLSearchParams(hash);
+
+  return {
+    accessToken: params.get('access_token'),
+    refreshToken: params.get('refresh_token'),
+  };
+};
 
 const AuthContext = createContext({});
 
@@ -105,16 +119,15 @@ export const AuthProvider = ({ children }) => {
         );
 
         if (result.type === 'success') {
-          const url = result.url;
-          const params = new URLSearchParams(url.split('#')[1]);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
+          const { accessToken, refreshToken } = extractTokensFromCallbackUrl(result.url);
 
           if (accessToken && refreshToken) {
             await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
+          } else {
+            throw new Error('Google oturum bilgisi alınamadı');
           }
         } else if (result.type === 'cancel') {
           throw new Error('Google girişi iptal edildi');
@@ -130,11 +143,7 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      const isLocalTestSession = session?.user?.id === 'test-user-123' || user?.id === 'test-user-123';
-
-      if (!isLocalTestSession) {
-        await supabase.auth.signOut();
-      }
+      await supabase.auth.signOut();
 
       setUser(null);
       setSession(null);
@@ -148,28 +157,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Local test login - development only
-  const signInTestUser = async () => {
-    const mockUser = {
-      id: 'test-user-123',
-      email: 'test@example.com',
-      user_metadata: {
-        full_name: 'Test Kullanıcı',
-        avatar_url: null,
-      },
-      created_at: new Date().toISOString(),
-    };
-    
-    setUser(mockUser);
-    setSession({ user: mockUser });
-  };
-
   const value = {
     user,
     session,
     loading,
     signInWithGoogle,
-    signInTestUser,
     signOut,
   };
 

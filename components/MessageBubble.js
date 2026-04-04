@@ -1,9 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
 
+const canOpenMediaUri = (uri) => {
+  if (typeof uri !== 'string') {
+    return false;
+  }
+
+  return uri.startsWith('https://') || uri.startsWith('data:audio/') || uri.startsWith('data:video/');
+};
+
 export default function MessageBubble({ message, isUser, theme }) {
   const handleOpenMedia = async () => {
-    if (!message?.media?.uri) {
+    if (!message?.media?.uri || !canOpenMediaUri(message.media.uri)) {
       return;
     }
 
