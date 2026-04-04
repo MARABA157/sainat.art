@@ -56,6 +56,14 @@ const buildJsonResponse = (body: unknown, status = 200) =>
     },
   });
 
+const extractBearerToken = (authorization: string | null) => {
+  if (!authorization || !authorization.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+
+  return authorization.slice(7).trim() || null;
+};
+
 const buildTextMessage = (text: string, media: Record<string, unknown> | null = null) => ({
   text,
   media,
@@ -650,7 +658,9 @@ Deno.serve(async (request) => {
 
   try {
     const authorization = request.headers.get('Authorization');
-    if (!authorization) {
+    const accessToken = extractBearerToken(authorization);
+
+    if (!accessToken) {
       return buildJsonResponse({ error: 'Unauthorized' }, 401);
     }
 
@@ -668,17 +678,12 @@ Deno.serve(async (request) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: authorization,
-        },
-      },
       auth: {
         persistSession: false,
       },
     });
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
     if (userError || !userData.user) {
       return buildJsonResponse({ error: 'Unauthorized' }, 401);
     }
