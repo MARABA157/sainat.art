@@ -105,6 +105,7 @@ export default function ChatScreen() {
     conversations,
     currentConversationId,
     selectConversation,
+    deleteConversation,
   } = useChat(t);
   const flatListRef = useRef(null);
   const prevUserRef = useRef(null);
@@ -212,6 +213,24 @@ export default function ChatScreen() {
         [conversationId]: typeof updater === 'function' ? updater(base) : { ...base, ...updater },
       };
     });
+  };
+
+  const handleDeleteConversation = (conversationId) => {
+    Alert.alert(
+      'Sohbeti Sil',
+      'Bu sohbet ve içindeki tüm mesajlar kalıcı olarak silinecek. Emin misiniz?',
+      [
+        {
+          text: 'İptal',
+          style: 'cancel',
+        },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: () => deleteConversation(conversationId),
+        },
+      ]
+    );
   };
 
   const handleToggleFavorite = (conversationId) => {
@@ -360,8 +379,9 @@ export default function ChatScreen() {
         conversationMeta={conversationMeta}
         onToggleFavorite={handleToggleFavorite}
         onCycleFolder={handleCycleFolder}
+        onDeleteConversation={handleDeleteConversation}
         t={t}
-        theme={theme}
+        theme={themes[selectedChatTheme.palette]}
       />
       <View
         style={[

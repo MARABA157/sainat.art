@@ -285,6 +285,50 @@ export default function useChat(t) {
     setCurrentConversationId(conversationId);
   }, []);
 
+  const deleteConversation = useCallback(async (conversationId) => {
+    if (!hasSupabaseSession || !conversationId) {
+      return;
+    }
+
+    try {
+      // Önce konuşmaya ait tüm mesajları sil
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      if (messagesError) {
+        console.error('Mesajlar silinirken hata:', messagesError);
+        throw new Error('Mesajlar silinirken hata oluştu.');
+      }
+
+      // Sonra konuşmayı sil
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', conversationId)
+        .eq('user_id', user.id); // Kullanıcının kendi konuşmasını sildiğinden emin ol
+
+      if (conversationError) {
+        console.error('Konuşma silinirken hata:', conversationError);
+        throw new Error('Konuşma silinirken hata oluştu.');
+      }
+
+      // Eğer silinen konuşma aktifse, state'i temizle
+      if (currentConversationId === conversationId) {
+        setCurrentConversationId(null);
+        setMessages([]);
+      }
+
+      // Konuşmalar listesini yeniden yükle
+      await loadConversations();
+
+    } catch (error) {
+      console.error('Konuşma silinirken hata:', error);
+      throw error;
+    }
+  }, [hasSupabaseSession, user?.id, currentConversationId, loadConversations]);
+
   return {
     messages,
     isTyping,
@@ -295,5 +339,6 @@ export default function useChat(t) {
     startNewChat,
     selectConversation,
     loadConversations,
+    deleteConversation,
   };
 }

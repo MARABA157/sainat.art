@@ -29,6 +29,7 @@ export default function Sidebar({
   conversationMeta = {},
   onToggleFavorite,
   onCycleFolder,
+  onDeleteConversation,
   t,
   theme,
 }) {
@@ -109,6 +110,12 @@ export default function Sidebar({
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.chatAction} onPress={() => onCycleFolder?.(conversation.id)}>
                         <Ionicons name="folder-open-outline" size={18} color={theme.sidebarMutedText} />
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.chatAction} 
+                        onPress={() => onDeleteConversation?.(conversation.id)}
+                      >
+                        <Ionicons name="trash-outline" size={18} color="#EF4444" />
                       </TouchableOpacity>
                     </View>
                   </View>

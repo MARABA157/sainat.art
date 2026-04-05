@@ -143,13 +143,17 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      console.log('AuthContext signOut called');
       await supabase.auth.signOut();
+      console.log('Supabase signOut successful');
 
       setUser(null);
       setSession(null);
+      console.log('User and session state cleared');
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.history.replaceState({}, document.title, '/');
+        console.log('Web URL cleaned');
       }
     } catch (error) {
       console.error('Error signing out:', error);
