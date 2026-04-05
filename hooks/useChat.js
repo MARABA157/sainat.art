@@ -52,6 +52,8 @@ const deserializeMessageContent = (content) => {
 };
 
 const requestModelResponse = async ({ selectedModel, messages, text, accessToken }) => {
+  console.log('DEBUG - accessToken:', accessToken ? 'defined (length: ' + accessToken.length + ')' : 'UNDEFINED');
+  
   const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://njpmpgwvuswxyglxdmst.supabase.co';
   
   const response = await fetch(`${supabaseUrl}/functions/v1/ai-proxy`, {
@@ -109,7 +111,7 @@ export default function useChat(t) {
     }
   }, [currentConversationId, hasSupabaseSession]);
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -133,7 +135,7 @@ export default function useChat(t) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, currentConversationId]);
 
   const loadMessages = async (conversationId) => {
     try {
@@ -300,6 +302,16 @@ export default function useChat(t) {
       return;
     }
 
+    // Optimistic UI: Silinecek konuşmayı listeden hemen çıkar
+    const conversationToDelete = conversations.find(c => c.id === conversationId);
+    setConversations(prev => prev.filter(c => c.id !== conversationId));
+    
+    // Eğer silinen konuşma aktifse, state'i temizle
+    if (currentConversationId === conversationId) {
+      setCurrentConversationId(null);
+      setMessages([]);
+    }
+
     try {
       console.log('Deleting messages for conversation:', conversationId);
       // Önce konuşmaya ait tüm mesajları sil
@@ -321,7 +333,7 @@ export default function useChat(t) {
         .from('conversations')
         .delete()
         .eq('id', conversationId)
-        .eq('user_id', user.id); // Kullanıcının kendi konuşmasını sildiğinden emin ol
+        .eq('user_id', user.id);
 
       if (conversationError) {
         console.error('Konuşma silinirken hata:', conversationError);
@@ -329,20 +341,15 @@ export default function useChat(t) {
       }
       console.log('Conversation deleted successfully');
 
-      // Eğer silinen konuşma aktifse, state'i temizle
-      if (currentConversationId === conversationId) {
-        setCurrentConversationId(null);
-        setMessages([]);
-      }
-
-      // Konuşmalar listesini yeniden yükle
-      await loadConversations();
-
     } catch (error) {
       console.error('Konuşma silinirken hata:', error);
-      throw error;
+      // Hata olursa konuşmayı listeye geri ekle
+      if (conversationToDelete) {
+        setConversations(prev => [...prev, conversationToDelete]);
+      }
+      Alert.alert('Hata', 'Konuşma silinirken bir hata oluştu.');
     }
-  }, [hasSupabaseSession, user?.id, currentConversationId, loadConversations]);
+  }, [hasSupabaseSession, user?.id, currentConversationId, conversations]);
 
   return {
     messages,

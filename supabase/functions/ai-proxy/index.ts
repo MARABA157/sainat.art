@@ -575,7 +575,7 @@ const requestOpenAiVideoResponse = async ({ prompt, model, apiKey }: { prompt: s
       model,
       prompt: buildVideoPrompt(prompt),
       size: '1280x720',
-      seconds: '5',
+      seconds: '4',
     }),
   });
 
