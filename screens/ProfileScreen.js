@@ -124,36 +124,22 @@ export default function ProfileScreen({
   );
 
   const handleSignOut = async () => {
-    console.log('handleSignOut called');
-    Alert.alert(
-      t.profile.signOutConfirm.title,
-      t.profile.signOutConfirm.message,
-      [
-        {
-          text: t.profile.signOutConfirm.cancel,
-          style: 'cancel',
-        },
-        {
-          text: t.profile.signOutConfirm.confirm,
-          style: 'destructive',
-          onPress: async () => {
-            console.log('Sign out confirmed');
-            try {
-              setLoading(true);
-              console.log('Calling signOut...');
-              await signOut();
-              console.log('Sign out successful, calling onClose...');
-              onClose();
-            } catch (error) {
-              console.error('Sign out error:', error);
-              Alert.alert(t.profile.error, error.message);
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    console.log('handleSignOut called - bypassing Alert');
+    try {
+      setLoading(true);
+      console.log('Calling signOut...');
+      await signOut();
+      console.log('Sign out successful');
+      if (onClose) {
+        console.log('Calling onClose...');
+        onClose();
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      Alert.alert(t.profile.error, error?.message || 'Çıkış yapılırken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openSupportSheet = (sheetKey) => {
