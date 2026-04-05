@@ -217,24 +217,8 @@ export default function ChatScreen() {
 
   const handleDeleteConversation = (conversationId) => {
     console.log('handleDeleteConversation called with:', conversationId);
-    Alert.alert(
-      'Sohbeti Sil',
-      'Bu sohbet ve içindeki tüm mesajlar kalıcı olarak silinecek. Emin misiniz?',
-      [
-        {
-          text: 'İptal',
-          style: 'cancel',
-        },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: () => {
-            console.log('User confirmed deletion for:', conversationId);
-            deleteConversation(conversationId);
-          },
-        },
-      ]
-    );
+    console.log('Directly calling deleteConversation (no dialog)');
+    deleteConversation(conversationId);
   };
 
   const handleToggleFavorite = (conversationId) => {
