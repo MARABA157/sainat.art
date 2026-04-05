@@ -11,6 +11,15 @@ const DEFAULT_SELECTED_MODEL = {
   providerName: 'Gemini',
 };
 
+const getRandomResponse = (translations) => {
+  const responses = translations?.chat?.mockResponses || [
+    'Anladım! Size bu konuda nasıl yardımcı olabilirim?',
+    'Bu ilginç bir soru. Daha fazla detay verebilir misiniz?',
+    'Size yardımcı olmaktan mutluluk duyarım!',
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
 const buildTextMessage = (text, media) => ({
   text,
   media: media || null,
@@ -135,6 +144,10 @@ export default function useChat(t) {
       }
 
       setConversations(data || []);
+      
+      if (data && data.length > 0 && !currentConversationId) {
+        setCurrentConversationId(data[0].id);
+      }
     } catch (error) {
       console.error('Sohbetler yüklenirken hata:', error);
     } finally {
@@ -203,17 +216,18 @@ export default function useChat(t) {
       isUser: true,
       timestamp: new Date().toISOString(),
     };
-    let persistedUserMessageId = null;
-    let createdConversationId = null;
 
     if (!hasSupabaseSession) {
+      setMessages((prev) => [...prev, userMessage]);
+      setIsTyping(true);
+
       try {
         throw new Error('AI özelliklerini kullanmak için Google ile giriş yapın.');
       } catch (error) {
         console.error('AI yanıtı alınırken hata:', error);
         const fallbackMessage = {
           id: generateId(),
-          text: error?.message || 'AI yanıtı alınamadı.',
+          text: error?.message || getRandomResponse(t),
           isUser: false,
           timestamp: new Date().toISOString(),
         };
@@ -229,47 +243,29 @@ export default function useChat(t) {
       if (!conversationId) {
         conversationId = await createConversation(text.slice(0, 30) + '...');
         if (!conversationId) return;
-        createdConversationId = conversationId;
       }
 
-      setMessages((prev) => [...prev, userMessage]);
-      setIsTyping(true);
-
-      const { data: insertedUserMessage, error: msgError } = await supabase
+      const { error: msgError } = await supabase
         .from('messages')
         .insert([{
           conversation_id: conversationId,
           user_id: user.id,
           content: text,
           is_user: true,
-        }])
-        .select('id')
-        .single();
+        }]);
 
       if (msgError) {
         throw new Error(getReadableSupabaseError(msgError));
       }
 
-      persistedUserMessageId = insertedUserMessage?.id || null;
-
-      const {
-        data: { session: activeSession },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        throw new Error(getReadableSupabaseError(sessionError));
-      }
-
-      if (!activeSession?.access_token) {
-        throw new Error('Oturumunuz sona ermiş olabilir. Lütfen tekrar giriş yapın.');
-      }
+      setMessages((prev) => [...prev, userMessage]);
+      setIsTyping(true);
 
       const aiResponse = await requestModelResponse({
         selectedModel,
         messages,
         text,
-        accessToken: activeSession.access_token,
+        accessToken: session?.access_token,
       });
 
       const { error: aiInsertError } = await supabase
@@ -293,38 +289,8 @@ export default function useChat(t) {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMessage]);
-      await loadMessages(conversationId);
 
     } catch (error) {
-      setMessages((prev) => prev.filter((message) => message.id !== userMessage.id));
-
-      if (persistedUserMessageId) {
-        const { error: rollbackError } = await supabase
-          .from('messages')
-          .delete()
-          .eq('id', persistedUserMessageId)
-          .eq('user_id', user.id);
-
-        if (rollbackError) {
-          console.error('Başarısız mesaj geri alınırken hata:', rollbackError);
-        }
-      }
-
-      if (createdConversationId) {
-        const { error: conversationRollbackError } = await supabase
-          .from('conversations')
-          .delete()
-          .eq('id', createdConversationId)
-          .eq('user_id', user.id);
-
-        if (conversationRollbackError) {
-          console.error('Başarısız sohbet geri alınırken hata:', conversationRollbackError);
-        } else {
-          setConversations((prev) => prev.filter((conversation) => conversation.id !== createdConversationId));
-          setCurrentConversationId(null);
-        }
-      }
-
       console.error('Mesaj gönderilirken hata:', error);
       const errorMessage = {
         id: generateId(),
@@ -336,7 +302,7 @@ export default function useChat(t) {
     } finally {
       setIsTyping(false);
     }
-  }, [hasSupabaseSession, user, currentConversationId, messages]);
+  }, [hasSupabaseSession, user, currentConversationId, messages, t]);
 
   const startNewChat = useCallback(async () => {
     if (hasSupabaseSession) {
