@@ -70,15 +70,12 @@ const getReadableSupabaseError = (error) => {
   return message || 'Supabase isteği sırasında beklenmeyen bir hata oluştu.';
 };
 
-const requestModelResponse = async ({ selectedModel, messages, text, accessToken }) => {
-  if (!accessToken) {
+const requestModelResponse = async ({ selectedModel, messages, text, hasSupabaseSession }) => {
+  if (!hasSupabaseSession) {
     throw new Error('AI özelliklerini kullanmak için Google ile giriş yapın.');
   }
 
   const { data, error } = await supabase.functions.invoke('ai-proxy', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     body: {
       selectedModel: selectedModel || DEFAULT_SELECTED_MODEL,
       messages: messages.map((message) => ({
@@ -137,7 +134,7 @@ export default function useChat(t) {
         .from('conversations')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) {
         throw new Error(getReadableSupabaseError(error));
@@ -265,7 +262,7 @@ export default function useChat(t) {
         selectedModel,
         messages,
         text,
-        accessToken: session?.access_token,
+        hasSupabaseSession,
       });
 
       const { error: aiInsertError } = await supabase
