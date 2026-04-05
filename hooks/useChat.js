@@ -51,21 +51,31 @@ const deserializeMessageContent = (content) => {
   }
 };
 
-const requestModelResponse = async ({ selectedModel, messages, text }) => {
-  const { data, error } = await supabase.functions.invoke('ai-proxy', {
-    body: {
+const requestModelResponse = async ({ selectedModel, messages, text, accessToken }) => {
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://njpmpgwvuswxyglxdmst.supabase.co';
+  
+  const response = await fetch(`${supabaseUrl}/functions/v1/ai-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': accessToken ? `Bearer ${accessToken}` : '',
+    },
+    body: JSON.stringify({
       selectedModel: selectedModel || DEFAULT_SELECTED_MODEL,
       messages: messages.map((message) => ({
         text: message.text,
         isUser: message.isUser,
       })),
       text,
-    },
+    }),
   });
 
-  if (error) {
-    throw new Error(error.message || 'AI yanıtı alınamadı.');
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AI proxy error: ${response.status} - ${errorText}`);
   }
+
+  const data = await response.json();
 
   if (!data || (typeof data.text !== 'string' && !data.media)) {
     throw new Error('Backend geçerli bir AI yanıtı döndürmedi.');
@@ -183,6 +193,7 @@ export default function useChat(t) {
           selectedModel,
           messages,
           text,
+          accessToken: session?.access_token,
         });
         const aiMessage = {
           id: generateId(),
@@ -232,6 +243,7 @@ export default function useChat(t) {
         selectedModel,
         messages,
         text,
+        accessToken: session?.access_token,
       });
 
       const { error: aiInsertError } = await supabase
