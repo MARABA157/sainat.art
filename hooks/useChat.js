@@ -189,11 +189,12 @@ export default function useChat(t) {
       setIsTyping(true);
 
       try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         const aiResponse = await requestModelResponse({
           selectedModel,
           messages,
           text,
-          accessToken: session?.access_token,
+          accessToken: currentSession?.access_token,
         });
         const aiMessage = {
           id: generateId(),
@@ -239,11 +240,12 @@ export default function useChat(t) {
       setMessages((prev) => [...prev, userMessage]);
       setIsTyping(true);
 
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       const aiResponse = await requestModelResponse({
         selectedModel,
         messages,
         text,
-        accessToken: session?.access_token,
+        accessToken: currentSession?.access_token,
       });
 
       const { error: aiInsertError } = await supabase
