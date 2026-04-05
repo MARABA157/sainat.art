@@ -110,7 +110,7 @@ export default function useChat(t) {
         .from('conversations')
         .select('*')
         .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Supabase error loading conversations:', error);
