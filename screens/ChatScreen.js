@@ -216,6 +216,7 @@ export default function ChatScreen() {
   };
 
   const handleDeleteConversation = (conversationId) => {
+    console.log('handleDeleteConversation called with:', conversationId);
     Alert.alert(
       'Sohbeti Sil',
       'Bu sohbet ve içindeki tüm mesajlar kalıcı olarak silinecek. Emin misiniz?',
@@ -227,7 +228,10 @@ export default function ChatScreen() {
         {
           text: 'Sil',
           style: 'destructive',
-          onPress: () => deleteConversation(conversationId),
+          onPress: () => {
+            console.log('User confirmed deletion for:', conversationId);
+            deleteConversation(conversationId);
+          },
         },
       ]
     );

@@ -51,12 +51,15 @@ const deserializeMessageContent = (content) => {
   }
 };
 
-const requestModelResponse = async ({ selectedModel, messages, text, hasSupabaseSession }) => {
+const requestModelResponse = async ({ selectedModel, messages, text, hasSupabaseSession, accessToken }) => {
   if (!hasSupabaseSession) {
     throw new Error('AI özelliklerini kullanmak için Google ile giriş yapın.');
   }
 
   const { data, error } = await supabase.functions.invoke('ai-proxy', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: {
       selectedModel: selectedModel || DEFAULT_SELECTED_MODEL,
       messages: messages.map((message) => ({
@@ -188,6 +191,7 @@ export default function useChat(t) {
           messages,
           text,
           hasSupabaseSession,
+          accessToken: session?.access_token,
         });
         const aiMessage = {
           id: generateId(),
@@ -238,6 +242,7 @@ export default function useChat(t) {
         messages,
         text,
         hasSupabaseSession,
+        accessToken: session?.access_token,
       });
 
       const { error: aiInsertError } = await supabase
@@ -286,11 +291,14 @@ export default function useChat(t) {
   }, []);
 
   const deleteConversation = useCallback(async (conversationId) => {
+    console.log('deleteConversation called with:', conversationId);
     if (!hasSupabaseSession || !conversationId) {
+      console.log('Early return: hasSupabaseSession:', hasSupabaseSession, 'conversationId:', conversationId);
       return;
     }
 
     try {
+      console.log('Deleting messages for conversation:', conversationId);
       // Önce konuşmaya ait tüm mesajları sil
       const { error: messagesError } = await supabase
         .from('messages')
@@ -301,7 +309,9 @@ export default function useChat(t) {
         console.error('Mesajlar silinirken hata:', messagesError);
         throw new Error('Mesajlar silinirken hata oluştu.');
       }
+      console.log('Messages deleted successfully');
 
+      console.log('Deleting conversation:', conversationId);
       // Sonra konuşmayı sil
       const { error: conversationError } = await supabase
         .from('conversations')
@@ -313,6 +323,7 @@ export default function useChat(t) {
         console.error('Konuşma silinirken hata:', conversationError);
         throw new Error('Konuşma silinirken hata oluştu.');
       }
+      console.log('Conversation deleted successfully');
 
       // Eğer silinen konuşma aktifse, state'i temizle
       if (currentConversationId === conversationId) {
