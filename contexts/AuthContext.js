@@ -154,6 +154,8 @@ export const AuthProvider = ({ children }) => {
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.history.replaceState({}, document.title, '/');
         console.log('Web URL cleaned');
+        // Tam emin olmak için web tarafında tam sayfa yenile
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error signing out:', error);

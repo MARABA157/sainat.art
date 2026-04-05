@@ -41,6 +41,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@types/react": "~19.2.10",
     "depcheck": "^1.4.7",
     "eslint": "^10.0.3",
     "prettier": "^3.8.1"

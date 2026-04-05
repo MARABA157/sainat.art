@@ -660,16 +660,6 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const authorization = request.headers.get('Authorization');
-    console.log('Authorization header:', authorization);
-    const accessToken = extractBearerToken(authorization);
-    console.log('Extracted accessToken:', accessToken ? 'present' : 'missing');
-
-    if (!accessToken) {
-      console.log('No accessToken found, returning 401');
-      return buildJsonResponse({ error: 'Unauthorized - No token' }, 401);
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -688,21 +678,6 @@ Deno.serve(async (request) => {
 
     if (!openAiApiKey || !geminiApiKey) {
       throw new Error('AI provider secret anahtarları eksik.');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-      },
-    });
-
-    console.log('Calling supabase.auth.getUser...');
-    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
-    console.log('getUser result:', { userData: userData?.user ? 'present' : 'null', userError: userError?.message || 'none' });
-    
-    if (userError || !userData.user) {
-      console.log('User validation failed, returning 401');
-      return buildJsonResponse({ error: 'Unauthorized - Invalid token' }, 401);
     }
 
     const body = await request.json();

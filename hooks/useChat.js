@@ -303,7 +303,8 @@ export default function useChat(t) {
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
-        .eq('conversation_id', conversationId);
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id);
 
       if (messagesError) {
         console.error('Mesajlar silinirken hata:', messagesError);
