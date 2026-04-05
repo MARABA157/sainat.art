@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase, SUPABASE_AUTH_STORAGE_KEY } from '../config/supabase';
+import { supabase } from '../config/supabase';
 
 // Web platformu için güvenli import
 let WebBrowser = null;
@@ -33,18 +32,6 @@ const extractTokensFromCallbackUrl = (callbackUrl) => {
 
 const AuthContext = createContext({});
 
-const clearStoredSession = async () => {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') {
-      window.localStorage?.removeItem(SUPABASE_AUTH_STORAGE_KEY);
-      window.sessionStorage?.removeItem(SUPABASE_AUTH_STORAGE_KEY);
-    }
-    return;
-  }
-
-  await AsyncStorage.removeItem(SUPABASE_AUTH_STORAGE_KEY);
-};
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -67,63 +54,25 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          throw error;
-        }
-
-        if (!isMounted) {
-          return;
-        }
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session) {
-          cleanupWebCallbackUrl();
-        }
-      } catch (error) {
-        await clearStoredSession();
-
-        if (isMounted) {
-          setSession(null);
-          setUser(null);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!isMounted) {
-        return;
-      }
-
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-
       if (session) {
         cleanupWebCallbackUrl();
-      } else {
-        await clearStoredSession();
       }
-
       setLoading(false);
     });
 
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session) {
+        cleanupWebCallbackUrl();
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
@@ -194,20 +143,12 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
-
-      if (error) {
-        throw error;
-      }
-
-      await clearStoredSession();
+      await supabase.auth.signOut();
 
       setUser(null);
       setSession(null);
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
-        window.localStorage?.removeItem(SUPABASE_AUTH_STORAGE_KEY);
-        window.sessionStorage?.removeItem(SUPABASE_AUTH_STORAGE_KEY);
         window.history.replaceState({}, document.title, '/');
       }
     } catch (error) {

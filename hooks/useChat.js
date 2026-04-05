@@ -51,25 +51,6 @@ const deserializeMessageContent = (content) => {
   }
 };
 
-const getReadableSupabaseError = (error) => {
-  const message = typeof error?.message === 'string' ? error.message : '';
-  const status = error?.context?.status;
-
-  if (status === 401 || /unauthorized|jwt|token|auth/i.test(message)) {
-    return 'Oturumunuz sona ermiş olabilir. Lütfen tekrar giriş yapın.';
-  }
-
-  if (status === 404 || /failed to send a request|fetch|network|network request failed/i.test(message)) {
-    return 'Supabase bağlantısında sorun oluştu. İnternet bağlantınızı ve proje ayarlarınızı kontrol edin.';
-  }
-
-  if (/row-level security|permission denied/i.test(message)) {
-    return 'Bu işlem için yetkiniz yok. Supabase RLS politikalarını kontrol edin.';
-  }
-
-  return message || 'Supabase isteği sırasında beklenmeyen bir hata oluştu.';
-};
-
 const requestModelResponse = async ({ selectedModel, messages, text, hasSupabaseSession }) => {
   if (!hasSupabaseSession) {
     throw new Error('AI özelliklerini kullanmak için Google ile giriş yapın.');
@@ -87,7 +68,7 @@ const requestModelResponse = async ({ selectedModel, messages, text, hasSupabase
   });
 
   if (error) {
-    throw new Error(getReadableSupabaseError(error) || 'AI yanıtı alınamadı.');
+    throw new Error(error.message || 'AI yanıtı alınamadı.');
   }
 
   if (!data || (typeof data.text !== 'string' && !data.media)) {
@@ -123,11 +104,6 @@ export default function useChat(t) {
   }, [currentConversationId, hasSupabaseSession]);
 
   const loadConversations = async () => {
-    if (!user?.id) {
-      setConversations([]);
-      return;
-    }
-
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -137,7 +113,8 @@ export default function useChat(t) {
         .order('updated_at', { ascending: false });
 
       if (error) {
-        throw new Error(getReadableSupabaseError(error));
+        console.error('Supabase error loading conversations:', error);
+        throw error;
       }
 
       setConversations(data || []);
@@ -153,11 +130,6 @@ export default function useChat(t) {
   };
 
   const loadMessages = async (conversationId) => {
-    if (!user?.id || !conversationId) {
-      setMessages([]);
-      return;
-    }
-
     try {
       const { data, error } = await supabase
         .from('messages')
@@ -166,9 +138,7 @@ export default function useChat(t) {
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        throw new Error(getReadableSupabaseError(error));
-      }
+      if (error) throw error;
       
       setMessages(data?.map(msg => ({
         ...deserializeMessageContent(msg.content),
@@ -182,10 +152,6 @@ export default function useChat(t) {
   };
 
   const createConversation = async (title = 'Yeni Sohbet') => {
-    if (!user?.id) {
-      return null;
-    }
-
     try {
       const { data, error } = await supabase
         .from('conversations')
@@ -193,9 +159,7 @@ export default function useChat(t) {
         .select()
         .single();
 
-      if (error) {
-        throw new Error(getReadableSupabaseError(error));
-      }
+      if (error) throw error;
       
       setConversations(prev => [data, ...prev]);
       setCurrentConversationId(data.id);
@@ -219,9 +183,22 @@ export default function useChat(t) {
       setIsTyping(true);
 
       try {
-        throw new Error('AI özelliklerini kullanmak için Google ile giriş yapın.');
+        const aiResponse = await requestModelResponse({
+          selectedModel,
+          messages,
+          text,
+          hasSupabaseSession,
+        });
+        const aiMessage = {
+          id: generateId(),
+          text: aiResponse.text,
+          media: aiResponse.media || null,
+          isUser: false,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
       } catch (error) {
-        console.error('AI yanıtı alınırken hata:', error);
+        console.error('Gemini yanıtı alınırken hata:', error);
         const fallbackMessage = {
           id: generateId(),
           text: error?.message || getRandomResponse(t),
@@ -251,9 +228,7 @@ export default function useChat(t) {
           is_user: true,
         }]);
 
-      if (msgError) {
-        throw new Error(getReadableSupabaseError(msgError));
-      }
+      if (msgError) throw msgError;
 
       setMessages((prev) => [...prev, userMessage]);
       setIsTyping(true);
@@ -274,9 +249,7 @@ export default function useChat(t) {
             is_user: false,
           }]);
 
-      if (aiInsertError) {
-        throw new Error(getReadableSupabaseError(aiInsertError));
-      }
+      if (aiInsertError) throw aiInsertError;
 
       const aiMessage = {
         id: generateId(),
@@ -291,7 +264,7 @@ export default function useChat(t) {
       console.error('Mesaj gönderilirken hata:', error);
       const errorMessage = {
         id: generateId(),
-        text: error?.message || 'Mesaj gönderilirken Supabase bağlantı hatası oluştu.',
+        text: error?.message || 'Mesaj gönderilirken bir hata oluştu.',
         isUser: false,
         timestamp: new Date().toISOString(),
       };
