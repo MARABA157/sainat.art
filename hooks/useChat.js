@@ -51,15 +51,8 @@ const deserializeMessageContent = (content) => {
   }
 };
 
-const requestModelResponse = async ({ selectedModel, messages, text, hasSupabaseSession, accessToken }) => {
-  if (!hasSupabaseSession) {
-    throw new Error('AI özelliklerini kullanmak için Google ile giriş yapın.');
-  }
-
+const requestModelResponse = async ({ selectedModel, messages, text }) => {
   const { data, error } = await supabase.functions.invoke('ai-proxy', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
     body: {
       selectedModel: selectedModel || DEFAULT_SELECTED_MODEL,
       messages: messages.map((message) => ({
@@ -190,8 +183,6 @@ export default function useChat(t) {
           selectedModel,
           messages,
           text,
-          hasSupabaseSession,
-          accessToken: session?.access_token,
         });
         const aiMessage = {
           id: generateId(),
@@ -241,8 +232,6 @@ export default function useChat(t) {
         selectedModel,
         messages,
         text,
-        hasSupabaseSession,
-        accessToken: session?.access_token,
       });
 
       const { error: aiInsertError } = await supabase
